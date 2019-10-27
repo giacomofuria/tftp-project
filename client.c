@@ -39,6 +39,17 @@ struct req_msg{
 	char mode[MAX_MODE_LENGTH];
 	uint8_t byte_zero;
 };
+struct data_msg{
+	uint16_t opcode;
+	uint16_t block_number;
+	char data[BLOCK_SIZE];
+};
+struct error_msg{
+	uint16_t opcode;
+	uint16_t error_number;
+	uint16_t error_message;
+	uint8_t byte_zero;
+};
 
 /* Serializza i campi della struttura req_msq e costruisce il buffer di invio.
    Restituisce la lunghezza in byte del buffer da inviare (num di byte da inviare)
@@ -64,7 +75,7 @@ int serialize(struct req_msg* msg, char* buffer){
 	return pos;
 }
 
-void invia(int sd, struct sockaddr_in* sv_addr){
+void send_msg(int sd, struct sockaddr_in* sv_addr){
 	int ret, len;
 	char buf[MAX_BUF_SIZE];
 	struct req_msg richiesta;
@@ -150,7 +161,7 @@ int main(int argc, char* argv[]){
 		printf("Richiesta inviata correttamente, inviati=%d\n",ret);
 	}
 	*/
-	invia(sd, &sv_addr);
+	send_msg(sd, &sv_addr);
 	
 	close(sd);
 
