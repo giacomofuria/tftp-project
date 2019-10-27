@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "costanti.h"
+#include "lib/costanti.h"
 
 void stampaIndirizzo(struct sockaddr_in str){
 	int porta = ntohs(str.sin_port);

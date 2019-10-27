@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <time.h>
 
-#include "costanti.h"
+#include "lib/costanti.h"
 
 void stampaIndirizzo(struct sockaddr_in str){
 	int porta = ntohs(str.sin_port);
@@ -40,6 +40,9 @@ struct req_msg{
 	uint8_t byte_zero;
 };
 
+/* Serializza i campi della struttura req_msq e costruisce il buffer di invio.
+   Restituisce la lunghezza in byte del buffer da inviare (num di byte da inviare)
+*/
 int serialize(struct req_msg* msg, char* buffer){
 	int pos = 0;
 	uint16_t net_order_opcode = htons(msg->opcode);
