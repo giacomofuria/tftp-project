@@ -1,0 +1,3 @@
+#define MAX_BUF_SIZE 		1024
+#define MAX_FILENAME_LENGTH 128
+#define	MAX_MODE_LENGTH		128

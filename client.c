@@ -9,8 +9,7 @@
 #include <errno.h>
 #include <time.h>
 
-#define BUFFER_SIZE 1024
-#define POLLING_TIME 5
+#include "costanti.h"
 
 void stampaIndirizzo(struct sockaddr_in str){
 	int porta = ntohs(str.sin_port);
@@ -69,8 +68,36 @@ int main(int argc, char* argv[]){
 
 	stampaIndirizzo(sv_addr);
 
+	uint16_t opcode = htons(1); //RRQ=1
+	uint8_t zeri = 0x00;
 	
+	char buffer[MAX_BUF_SIZE];
+	int pos = 0;
+
+	memcpy(buffer+pos, &opcode, sizeof(opcode));
+	pos+=sizeof(opcode);
 	
+	strcpy(buffer+pos, "prova.bin\0");
+	pos+=strlen("prova.bin\0")+1;
+	
+	memcpy(buffer+pos, &zeri, sizeof(zeri));
+	pos+=sizeof(zeri);
+	
+	strcpy(buffer+pos, "octet\0");
+	pos+=strlen("octet\0")+1;
+	
+	memcpy(buffer+pos, &zeri, sizeof(zeri));
+	pos+=sizeof(zeri);
+	
+	len = pos;
+	printf("pos=%d\n",pos);
+	ret = sendto(sd, buffer, len, 0, (struct sockaddr*)&sv_addr, sizeof(sv_addr));
+	if(ret < 0){
+		perror("Errore invio richiesta");
+		exit(0);
+	}else{
+		printf("Richiesta inviata correttamente, inviati=%d\n",ret);
+	}
 	close(sd);
 
 	return 0;
