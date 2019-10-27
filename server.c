@@ -105,5 +105,8 @@ int main(int argc, char* argv[]){
 	pos+=sizeof(zeri);
 	printf("zeri= %d\n",zeri);
 	printf("pos:%d\n",pos);
+
+	close(sd);
+
 	return 0;
 }

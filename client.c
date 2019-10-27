@@ -32,8 +32,56 @@ void stampa_stringa(char * s, int dim){
 	}
 	printf("\n");
 }
+
+struct req_msg{
+	uint16_t opcode;
+	char filename[MAX_FILENAME_LENGTH];
+	char mode[MAX_MODE_LENGTH];
+	uint8_t byte_zero;
+};
+
+int serialize(struct req_msg* msg, char* buffer){
+	int pos = 0;
+	uint16_t net_order_opcode = htons(msg->opcode);
+	memcpy(buffer+pos, &net_order_opcode, sizeof(msg->opcode));
+	pos+=sizeof(msg->opcode);
+	
+	strcpy(buffer+pos, msg->filename);
+	pos+=strlen(msg->filename)+1;
+	
+	memcpy(buffer+pos, &msg->byte_zero, sizeof(msg->byte_zero));
+	pos+=sizeof(msg->byte_zero);
+	
+	strcpy(buffer+pos, msg->mode);
+	pos+=strlen(msg->mode)+1;
+	
+	memcpy(buffer+pos, &msg->byte_zero, sizeof(msg->byte_zero));
+	pos+=sizeof(msg->byte_zero);
+	printf("pos=%d\n",pos);
+	return pos;
+}
+
+void invia(int sd, struct sockaddr_in* sv_addr){
+	int ret, len;
+	char buf[MAX_BUF_SIZE];
+	struct req_msg richiesta;
+	richiesta.opcode = RRQ;
+	strcpy(richiesta.filename, "giacomo.bin\0");
+	strcpy(richiesta.mode, "octet\0");
+	
+	len = serialize(&richiesta, buf);
+	
+	ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
+	if(ret < 0){
+		perror("Errore invio richiesta");
+		exit(0);
+	}else{
+		printf("Richiesta inviata correttamente, inviati=%d\n",ret);
+	}
+}
+
 int main(int argc, char* argv[]){
-	int ret, sd,len;
+	int ret, sd;
 
 	struct sockaddr_in my_addr, sv_addr;
 
@@ -67,7 +115,7 @@ int main(int argc, char* argv[]){
 	inet_pton(AF_INET, argv[1], &sv_addr.sin_addr);
 
 	stampaIndirizzo(sv_addr);
-
+	/*
 	uint16_t opcode = htons(1); //RRQ=1
 	uint8_t zeri = 0x00;
 	
@@ -98,6 +146,9 @@ int main(int argc, char* argv[]){
 	}else{
 		printf("Richiesta inviata correttamente, inviati=%d\n",ret);
 	}
+	*/
+	invia(sd, &sv_addr);
+	
 	close(sd);
 
 	return 0;
