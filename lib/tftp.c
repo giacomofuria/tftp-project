@@ -111,6 +111,40 @@ int serialize(int opcode, void *data, char *buffer){
 	return ret;
 }
 
+void deserialize_request(char* buffer, struct req_msg* req){
+	int pos=0;
+	memcpy(&req->opcode, buffer+pos, sizeof(req->opcode));
+	req->opcode = htons(req->opcode);
+	pos+=sizeof(req->opcode);
+
+	strcpy(req->filename, buffer+pos);
+	pos+=strlen(req->filename)+1;
+
+
+	memcpy(&req->byte_zero, buffer+pos, sizeof(req->byte_zero));
+	pos+=sizeof(req->byte_zero);
+
+	strcpy(req->mode, buffer+pos);
+	pos+=strlen(req->mode)+1;
+
+	memcpy(&req->byte_zero, buffer+pos, sizeof(req->byte_zero));
+	pos+=sizeof(req->byte_zero);
+}
+
+void deserialize(int opcode, char* buffer, void* data){
+	switch(opcode){
+		case RRQ:
+			deserialize_request(buffer, (struct req_msg *)data);
+			break;
+		case DATA:
+			break;
+		case ERROR:
+			break;
+		default:
+			break;
+	}
+}
+
 void send_request(int opcode, char* filename, char* mode, int sd, struct sockaddr_in* sv_addr){
 	int ret, len;
 	char buf[MAX_BUF_SIZE];
@@ -157,7 +191,7 @@ void send_error(uint16_t number, char* message, int sd, struct sockaddr_in* sv_a
 }
 
 /* Riceve un messaggio generico, legge il campo opcode e lo restituisce. Scrivere
-   il messaggio ricevuto nel parametro passato */
+   il messaggio ricevuto nel parametro passato buffer */
 uint16_t recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_addrlen){
 	uint16_t opcode;
 	int ret = recvfrom(sd, buffer, MAX_BUF_SIZE, 0, cl_addr,cl_addrlen);

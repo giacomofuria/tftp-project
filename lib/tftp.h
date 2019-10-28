@@ -42,6 +42,10 @@ int serialize_request(int opcode, struct req_msg *msg, char *buffer);
 int serialize_error(struct err_msg *err, char * buffer);
 int serialize(int opcode, void *data, char *buffer);
 
+void deserialize_request(char* buffer, struct req_msg* req);
+void deserialize(int opcode, char* buffer, void* data);
+
+
 /* Funzioni per l'invio di messaggi */
 void send_request(int opcode, char* filename, char* mode, int sd, struct sockaddr_in* sv_addr);
 void send_error(uint16_t number, char* message, int sd, struct sockaddr_in* sv_addr);

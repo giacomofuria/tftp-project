@@ -69,6 +69,11 @@ int main(int argc, char* argv[]){
 
 	uint16_t opcode = recv_msg(sd, buffer, (struct sockaddr*)&cl_addr,(socklen_t*)&addrlen);
 	printf("opcode=%d\n",opcode);
+	
+	struct req_msg richiesta;
+
+	deserialize(opcode, buffer, (void*)&richiesta);
+	print_msg(opcode, (void*)&richiesta);
 
 	close(sd);
 	
