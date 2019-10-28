@@ -25,7 +25,9 @@ void stampa_stringa(char * s, int dim){
 void print_req_msg(int opcode, struct req_msg* msg){
 	printf("opcode=%d | filename=%s | mode=%s",msg->opcode,msg->filename,msg->mode);
 }
-
+void print_err_msg(struct err_msg *err){
+	printf("opcode=%d | number=%d | message=%s",err->opcode, err->err_num, err->err_msg);
+}
 void print_msg(int opcode, void* data){
 	printf("\n| ");
 	switch(opcode){
@@ -35,6 +37,7 @@ void print_msg(int opcode, void* data){
 		case DATA:
 			break;
 		case ERROR:
+			print_err_msg((struct err_msg*)data);
 			break;
 		default:
 			break;
@@ -93,7 +96,7 @@ int serialize(int opcode, void *data, char *buffer){
 	switch(opcode){
 		case RRQ:
 			/* è necessario specificare di nuovo opcode perché un msg di 
-               richiesta può essere RRQ o WRQ 
+               richiesta può essere RRQ o WRQ (WRQ non implementato in quanto non richiesto)
             */
 			ret = serialize_request(RRQ, (struct req_msg*)data, buffer);
 			break;
@@ -151,7 +154,22 @@ void send_error(uint16_t number, char* message, int sd, struct sockaddr_in* sv_a
 		printf("Richiesta inviata correttamente, inviati %d byte\n",ret);
 	}
 	print_msg(ERROR, &errore);
-	
+}
+
+/* Riceve un messaggio generico, legge il campo opcode e lo restituisce. Scrivere
+   il messaggio ricevuto nel parametro passato */
+uint16_t recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_addrlen){
+	uint16_t opcode;
+	int ret = recvfrom(sd, buffer, MAX_BUF_SIZE, 0, cl_addr,cl_addrlen);
+	if(ret < 0){
+		perror("Errore ricezione richiesta");
+		exit(0);
+	}else{
+		printf("Richiesta ricevuta correttamente, ricevuti %d byte\n",ret);
+	}
+	memcpy(&opcode, buffer, sizeof(opcode));
+	opcode = ntohs(opcode);
+	return opcode;
 }
 
 

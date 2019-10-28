@@ -34,10 +34,9 @@ int main(int argc, char* argv[]){
 	}
 
 	char buffer[MAX_BUF_SIZE];
-	int pos=0;
 	
 	addrlen = sizeof(cl_addr);
-
+	/*
 	ret = recvfrom(sd, buffer, MAX_BUF_SIZE, 0, (struct sockaddr*)&cl_addr,&addrlen);
 	if(ret < 0){
 		perror("Errore ricezione richiesta");
@@ -47,7 +46,7 @@ int main(int argc, char* argv[]){
 	}
 
 	struct req_msg richiesta;
-
+	int pos=0;
 	memcpy(&richiesta.opcode, buffer+pos, sizeof(richiesta.opcode));
 	richiesta.opcode = htons(richiesta.opcode);
 	pos+=sizeof(richiesta.opcode);
@@ -66,8 +65,14 @@ int main(int argc, char* argv[]){
 	pos+=sizeof(richiesta.byte_zero);
 
 	print_msg(RRQ, &richiesta);
+	*/
+
+	uint16_t opcode = recv_msg(sd, buffer, (struct sockaddr*)&cl_addr,(socklen_t*)&addrlen);
+	printf("opcode=%d\n",opcode);
 
 	close(sd);
+	
+	
 
 	return 0;
 }

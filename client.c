@@ -37,7 +37,8 @@ int main(int argc, char* argv[]){
 	
 	stampaIndirizzo(sv_addr);
 	
-	send_request(RRQ, "giacomo.bin","octet", sd, &sv_addr);
+	//send_request(RRQ, "giacomo.bin","octet", sd, &sv_addr);
+	send_error(1,"messaggio di errore",sd,&sv_addr);
 	
 	close(sd);
 
