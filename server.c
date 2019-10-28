@@ -87,7 +87,7 @@ int main(int argc, char* argv[]){
 
 	strcpy(filename, buffer+pos);
 	pos+=strlen(filename)+1;
-	printf("filename= %s\n",filename);
+	printf("filename=%s\n",filename);
 	printf("pos:%d\n",pos);
 
 
