@@ -1,36 +1,6 @@
-#include <stdio.h>
-#include <arpa/inet.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <string.h> // per la memset
-#include <unistd.h> // per la close()
-#include <stdlib.h>
-#include <time.h>
-
 #include "lib/costanti.h"
+#include "lib/tftp.h"
 
-void stampaIndirizzo(struct sockaddr_in str){
-	int porta = ntohs(str.sin_port);
-	char indirizzo[INET_ADDRSTRLEN];
-	inet_ntop(AF_INET, &str.sin_addr, indirizzo, INET_ADDRSTRLEN);
-	printf("Indirizzo: %s\n",indirizzo);
-	printf("Numero di porta: %d\n",porta);
-}
-void stampa_stringa(char * s, int dim){
-	int i;
-	printf("Contenuto stringa: ");
-	for(i=0; i<dim; i++){
-		if(s[i]=='\0'){
-			printf("\\0 ");
-		}else if(s[i]=='\n'){
-			printf("\\n ");
-		}else{
-			printf("%c ",s[i]);
-		}
-	}
-	printf("\n");
-}
 int main(int argc, char* argv[]){
 	int porta, ret, sd;
 	socklen_t addrlen;

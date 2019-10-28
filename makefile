@@ -14,8 +14,8 @@ client.o: client.c
 tftp.o: lib/tftp.c
 	$(CC) $(CFLAGS) -c lib/tftp.c -o lib/tftp.o
 
-server: server.o
-	$(CC) server.o -o server
+server: server.o tftp.o
+	$(CC) server.o lib/tftp.o -o server
 
 server.o: server.c
 	$(CC) $(CFLAGS) -c server.c -o server.o
