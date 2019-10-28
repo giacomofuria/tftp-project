@@ -32,13 +32,10 @@ int main(int argc, char* argv[]){
 		perror("Errore nella bind: ");
 		exit(0);
 	}
-	
-	uint16_t opcode;
-	char filename[MAX_FILENAME_LENGTH];
-	char mode[MAX_MODE_LENGTH];
-	uint8_t zeri;
+
 	char buffer[MAX_BUF_SIZE];
 	int pos=0;
+	
 	addrlen = sizeof(cl_addr);
 
 	ret = recvfrom(sd, buffer, MAX_BUF_SIZE, 0, (struct sockaddr*)&cl_addr,&addrlen);
@@ -46,35 +43,29 @@ int main(int argc, char* argv[]){
 		perror("Errore ricezione richiesta");
 		exit(0);
 	}else{
-		printf("Richiesta ricevuta correttamente, ricevuti=%d\n",ret);
+		printf("Richiesta ricevuta correttamente, ricevuti %d byte\n",ret);
 	}
 
-	memcpy(&opcode, buffer+pos, sizeof(opcode));
-	opcode = htons(opcode);
-	pos+=sizeof(opcode);
-	printf("opcode=%d\n",opcode);
-	printf("pos:%d\n",pos);
+	struct req_msg richiesta;
 
-	strcpy(filename, buffer+pos);
-	pos+=strlen(filename)+1;
-	printf("filename=%s\n",filename);
-	printf("pos:%d\n",pos);
+	memcpy(&richiesta.opcode, buffer+pos, sizeof(richiesta.opcode));
+	richiesta.opcode = htons(richiesta.opcode);
+	pos+=sizeof(richiesta.opcode);
+
+	strcpy(richiesta.filename, buffer+pos);
+	pos+=strlen(richiesta.filename)+1;
 
 
-	memcpy(&zeri, buffer+pos, sizeof(zeri));
-	pos+=sizeof(zeri);
-	printf("zeri= %d\n",zeri);
-	printf("pos:%d\n",pos);
+	memcpy(&richiesta.byte_zero, buffer+pos, sizeof(richiesta.byte_zero));
+	pos+=sizeof(richiesta.byte_zero);
 
-	strcpy(mode, buffer+pos);
-	pos+=strlen(mode)+1;
-	printf("mode=%s\n",mode);
-	printf("pos:%d\n",pos);
+	strcpy(richiesta.mode, buffer+pos);
+	pos+=strlen(richiesta.mode)+1;
 
-	memcpy(&zeri, buffer+pos, sizeof(zeri));
-	pos+=sizeof(zeri);
-	printf("zeri= %d\n",zeri);
-	printf("pos:%d\n",pos);
+	memcpy(&richiesta.byte_zero, buffer+pos, sizeof(richiesta.byte_zero));
+	pos+=sizeof(richiesta.byte_zero);
+
+	print_msg(RRQ, &richiesta);
 
 	close(sd);
 

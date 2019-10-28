@@ -60,9 +60,30 @@ int serialize_request(int opcode, struct req_msg *msg, char *buffer){
 	strcpy(buffer+pos, msg->mode);
 	pos+=strlen(msg->mode)+1;
 	
+	msg->byte_zero = 0x00;
 	memcpy(buffer+pos, &msg->byte_zero, sizeof(msg->byte_zero));
 	pos+=sizeof(msg->byte_zero);
 	//printf("pos=%d\n",pos); // DEBUG
+	return pos;
+}
+
+int serialize_error(struct err_msg *err, char * buffer){
+	int pos=0;
+	uint16_t net_order_opcode = htons(err->opcode);
+	memcpy(buffer+pos, &net_order_opcode, sizeof(err->opcode));
+	pos+=sizeof(err->opcode);
+
+	uint16_t net_order_number = htons(err->err_num);
+	memcpy(buffer+pos, &net_order_number, sizeof(err->err_num));
+	pos+=sizeof(err->err_num);
+
+	strcpy(buffer+pos, err->err_msg);
+	pos+=strlen(err->err_msg)+1;
+
+	err->byte_zero = 0x00;
+	memcpy(buffer+pos, &err->byte_zero, sizeof(err->byte_zero));
+	pos+=sizeof(err->byte_zero);
+		
 	return pos;
 }
 
@@ -71,11 +92,15 @@ int serialize(int opcode, void *data, char *buffer){
 	
 	switch(opcode){
 		case RRQ:
+			/* è necessario specificare di nuovo opcode perché un msg di 
+               richiesta può essere RRQ o WRQ 
+            */
 			ret = serialize_request(RRQ, (struct req_msg*)data, buffer);
 			break;
 		case DATA:
 			break;
 		case ERROR:
+			ret = serialize_error((struct err_msg*)data,buffer);
 			break;
 		default: 
 			break;
@@ -105,3 +130,43 @@ void send_request(int opcode, char* filename, char* mode, int sd, struct sockadd
 	}
 	print_msg(RRQ, &richiesta);
 }
+
+void send_error(uint16_t number, char* message, int sd, struct sockaddr_in* sv_addr){
+	int ret, len;
+	char buf[MAX_BUF_SIZE];
+	struct err_msg errore;
+
+	errore.opcode = ERROR;
+	errore.err_num = number;
+	strcat(message, "\0");
+	strcpy(errore.err_msg, message);
+
+	len = serialize(ERROR, (void*)&errore, buf);
+	
+	ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
+	if(ret < 0){
+		perror("Errore invio richiesta");
+		exit(0);
+	}else{
+		printf("Richiesta inviata correttamente, inviati %d byte\n",ret);
+	}
+	print_msg(ERROR, &errore);
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
