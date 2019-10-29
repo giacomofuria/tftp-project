@@ -3,6 +3,7 @@
 #define	MAX_MODE_LENGTH		128
 #define MAX_ERROR_LENGTH	128
 #define BLOCK_SIZE			512
+#define MAX_DIR_LENGTH 		512
 
 // OPCODES
 #define RRQ		1

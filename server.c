@@ -3,13 +3,16 @@
 
 int main(int argc, char* argv[]){
 	int porta, ret, sd;
+	char directory[MAX_DIR_LENGTH];
 	socklen_t addrlen;
 	struct sockaddr_in my_addr, cl_addr;
 	
 	/* Gestione porte */
-	if(argc >= 2){
+	if(argc == 3){
 		porta = atoi(argv[1]);
 		printf("Server in ascolto sulla porta: %d\n",porta);
+		strcpy(directory, argv[2]);
+		printf("Directory: \"%s\"\n",directory);
 	}else{
 		printf("Errore! Inserisci tutti i parametri necessari\n");
 		exit(0);
@@ -48,12 +51,12 @@ int main(int argc, char* argv[]){
 	if(opcode == RRQ){
 			struct req_msg *richiesta;
 			richiesta = (struct req_msg*) msg;
-			printf("Ricevuto un nuovo messaggio RRQ %d\n",opcode);
+			printf("\nRicevuto un nuovo messaggio RRQ %d\n",opcode);
 			// ricerca del file ed invio del file
 			
 	}else if(opcode == ERROR){
 			struct err_msg* errore = (struct err_msg*) msg;
-			printf("Ricevuto un messaggio di errore %d\n",opcode);
+			printf("\nRicevuto un messaggio di errore %d\n",opcode);
 			// vedere operazioni necessarie
 			
 	}else{
@@ -62,10 +65,9 @@ int main(int argc, char* argv[]){
 		*/
 		
 	}
-			
 
-	
 	print_msg(opcode, msg);
+	
 	close(sd);
 
 	return 0;
