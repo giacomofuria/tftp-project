@@ -34,22 +34,38 @@ int main(int argc, char* argv[]){
 	}
 
 	char buffer[MAX_BUF_SIZE];
+	uint16_t opcode;
 	
 	addrlen = sizeof(cl_addr);
 
-	uint16_t opcode = recv_msg(sd, buffer, (struct sockaddr*)&cl_addr,(socklen_t*)&addrlen);
+	void* msg = recv_msg(sd, buffer, (struct sockaddr*)&cl_addr,(socklen_t*)&addrlen, &opcode);
 
 	/* Quando implementerò la versione multi-processo il processo dovrà prendere 
 	   una copia di cl_addr per sapere a chi inviare i dati o i messaggi di errore */	
-
-	printf("opcode=%d\n",opcode);
 	
-	void *msg;
+	/* In base al valore di opcode, il server deve cambiare comportamento */
+	
+	if(opcode == RRQ){
+			struct req_msg *richiesta;
+			richiesta = (struct req_msg*) msg;
+			printf("Ricevuto un nuovo messaggio RRQ %d\n",opcode);
+			// ricerca del file ed invio del file
+			
+	}else if(opcode == ERROR){
+			struct err_msg* errore = (struct err_msg*) msg;
+			printf("Ricevuto un messaggio di errore %d\n",opcode);
+			// vedere operazioni necessarie
+			
+	}else{
+		/* Qui il server riceve un messaggio con un opcode non valido e deve inviare 
+		   un messaggio di errore "Illegal TFTP Operation"
+		*/
+		
+	}
+			
 
-	msg = deserialize(opcode, buffer);
 	
 	print_msg(opcode, msg);
-
 	close(sd);
 
 	return 0;

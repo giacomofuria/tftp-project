@@ -215,8 +215,8 @@ void send_error(uint16_t number, char* message, int sd, struct sockaddr_in* sv_a
 
 /* Riceve un messaggio generico, legge il campo opcode e lo restituisce. Scrivere
    il messaggio ricevuto nel parametro passato buffer */
-uint16_t recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_addrlen){
-	uint16_t opcode;
+void* recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_addrlen, uint16_t* opcode){
+	void *msg;
 	int ret = recvfrom(sd, buffer, MAX_BUF_SIZE, 0, cl_addr,cl_addrlen);
 	if(ret < 0){
 		perror("Errore ricezione richiesta");
@@ -224,10 +224,24 @@ uint16_t recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl
 	}else{
 		printf("Richiesta ricevuta correttamente, ricevuti %d byte\n",ret);
 	}
-	memcpy(&opcode, buffer, sizeof(opcode));
-	opcode = ntohs(opcode);
+	memcpy(opcode, buffer, sizeof(*opcode));
+	*opcode = ntohs(*opcode);
+
+	msg = deserialize(*opcode, buffer);
+	
+	//print_msg(*opcode, msg); // DEBUG
+
+	return msg;
+}
+/*
+uint16_t get_msg_type(void *msg){
+	uint16_t opcode;
+	if(msg==0 || msg == NULL)
+		return -1;
+	memcpy(&opcode, msg, sizeof(opcode));
 	return opcode;
 }
+*/
 
 
 
