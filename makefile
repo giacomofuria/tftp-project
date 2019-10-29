@@ -3,21 +3,21 @@
 CC = gcc
 CFLAGS = -Wall
 
-all: client server
+all: tftp_client tftp_server
 
-client: client.o tftp.o
-	$(CC) client.o lib/tftp.o -o client
+tftp_client: tftp_client.o tftp.o
+	$(CC) tftp_client.o lib/tftp.o -o tftp_client
 
-client.o: client.c
-	$(CC) $(CFLAGS) -c client.c -o client.o
+tftp_client.o: tftp_client.c
+	$(CC) $(CFLAGS) -c tftp_client.c -o tftp_client.o
 
 tftp.o: lib/tftp.c
 	$(CC) $(CFLAGS) -c lib/tftp.c -o lib/tftp.o
 
-server: server.o tftp.o
-	$(CC) server.o lib/tftp.o -o server
+tftp_server: tftp_server.o tftp.o
+	$(CC) tftp_server.o lib/tftp.o -o tftp_server
 
-server.o: server.c
-	$(CC) $(CFLAGS) -c server.c -o server.o
+tftp_server.o: tftp_server.c
+	$(CC) $(CFLAGS) -c tftp_server.c -o tftp_server.o
 clean:
-	rm *.o lib/*.o client server
+	rm *.o lib/*.o tftp_client tftp_server
