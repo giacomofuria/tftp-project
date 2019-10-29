@@ -120,7 +120,6 @@ void deserialize_request(char* buffer, struct req_msg* req){
 	strcpy(req->filename, buffer+pos);
 	pos+=strlen(req->filename)+1;
 
-
 	memcpy(&req->byte_zero, buffer+pos, sizeof(req->byte_zero));
 	pos+=sizeof(req->byte_zero);
 
@@ -131,18 +130,42 @@ void deserialize_request(char* buffer, struct req_msg* req){
 	pos+=sizeof(req->byte_zero);
 }
 
-void deserialize(int opcode, char* buffer, void* data){
+void deserialize_error(char * buffer, struct err_msg* msg){
+	int pos=0;
+	
+	memcpy(&msg->opcode, buffer+pos, sizeof(msg->opcode));
+	msg->opcode = htons(msg->opcode);
+	pos+=sizeof(msg->opcode);
+
+	memcpy(&msg->err_num, buffer+pos, sizeof(msg->err_num));
+	msg->err_num = htons(msg->err_num);
+	pos+=sizeof(msg->err_num);
+
+	strcpy(msg->err_msg, buffer+pos);
+	pos+=strlen(msg->err_msg)+1;
+
+	memcpy(&msg->byte_zero, buffer+pos, sizeof(msg->byte_zero));
+	pos+=sizeof(msg->byte_zero);
+
+}
+
+void* deserialize(int opcode, char* buffer){
+	void *msg;
 	switch(opcode){
 		case RRQ:
-			deserialize_request(buffer, (struct req_msg *)data);
+			msg =  malloc(sizeof(struct req_msg));
+			deserialize_request(buffer, (struct req_msg*)msg);
 			break;
 		case DATA:
 			break;
 		case ERROR:
+			msg = malloc(sizeof(struct err_msg));
+			deserialize_error(buffer, (struct err_msg*)msg);
 			break;
 		default:
 			break;
 	}
+	return msg;
 }
 
 void send_request(int opcode, char* filename, char* mode, int sd, struct sockaddr_in* sv_addr){

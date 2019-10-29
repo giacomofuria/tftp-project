@@ -36,48 +36,21 @@ int main(int argc, char* argv[]){
 	char buffer[MAX_BUF_SIZE];
 	
 	addrlen = sizeof(cl_addr);
-	/*
-	ret = recvfrom(sd, buffer, MAX_BUF_SIZE, 0, (struct sockaddr*)&cl_addr,&addrlen);
-	if(ret < 0){
-		perror("Errore ricezione richiesta");
-		exit(0);
-	}else{
-		printf("Richiesta ricevuta correttamente, ricevuti %d byte\n",ret);
-	}
-
-	struct req_msg richiesta;
-	int pos=0;
-	memcpy(&richiesta.opcode, buffer+pos, sizeof(richiesta.opcode));
-	richiesta.opcode = htons(richiesta.opcode);
-	pos+=sizeof(richiesta.opcode);
-
-	strcpy(richiesta.filename, buffer+pos);
-	pos+=strlen(richiesta.filename)+1;
-
-
-	memcpy(&richiesta.byte_zero, buffer+pos, sizeof(richiesta.byte_zero));
-	pos+=sizeof(richiesta.byte_zero);
-
-	strcpy(richiesta.mode, buffer+pos);
-	pos+=strlen(richiesta.mode)+1;
-
-	memcpy(&richiesta.byte_zero, buffer+pos, sizeof(richiesta.byte_zero));
-	pos+=sizeof(richiesta.byte_zero);
-
-	print_msg(RRQ, &richiesta);
-	*/
 
 	uint16_t opcode = recv_msg(sd, buffer, (struct sockaddr*)&cl_addr,(socklen_t*)&addrlen);
+
+	/* Quando implementerò la versione multi-processo il processo dovrà prendere 
+	   una copia di cl_addr per sapere a chi inviare i dati o i messaggi di errore */	
+
 	printf("opcode=%d\n",opcode);
 	
-	struct req_msg richiesta;
+	void *msg;
 
-	deserialize(opcode, buffer, (void*)&richiesta);
-	print_msg(opcode, (void*)&richiesta);
+	msg = deserialize(opcode, buffer);
+	
+	print_msg(opcode, msg);
 
 	close(sd);
-	
-	
 
 	return 0;
 }

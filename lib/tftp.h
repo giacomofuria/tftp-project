@@ -42,8 +42,8 @@ int serialize_request(int opcode, struct req_msg *msg, char *buffer);
 int serialize_error(struct err_msg *err, char * buffer);
 int serialize(int opcode, void *data, char *buffer);
 
-void deserialize_request(char* buffer, struct req_msg* req);
-void deserialize(int opcode, char* buffer, void* data);
+void deserialize_request(char* buffer, struct req_msg* msg);
+void* deserialize(int opcode, char* buffer);
 
 
 /* Funzioni per l'invio di messaggi */
