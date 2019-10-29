@@ -217,13 +217,13 @@ void send_error(uint16_t number, char* message, int sd, struct sockaddr_in* sv_a
    il messaggio ricevuto nel parametro passato buffer */
 void* recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_addrlen, uint16_t* opcode){
 	void *msg;
-	int ret = recvfrom(sd, buffer, MAX_BUF_SIZE, 0, cl_addr,cl_addrlen);
-	if(ret < 0){
-		perror("Errore ricezione richiesta");
-		exit(0);
-	}else{
-		printf("Richiesta ricevuta correttamente, ricevuti %d byte\n",ret);
-	}
+	int ret;
+	do{
+		ret = recvfrom(sd, buffer, MAX_BUF_SIZE, 0, cl_addr,cl_addrlen);
+	}while(ret < 0);
+
+	printf("Richiesta ricevuta correttamente, ricevuti %d byte\n",ret);
+	
 	memcpy(opcode, buffer, sizeof(*opcode));
 	*opcode = ntohs(*opcode);
 

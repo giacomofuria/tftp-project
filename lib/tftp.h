@@ -55,4 +55,4 @@ void send_error(uint16_t number, char* message, int sd, struct sockaddr_in* sv_a
 void* recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_addrlen, uint16_t *opcode);
 
 /* Altre funzioni di utilità */
-uint16_t get_msg_type(void *msg);
+//uint16_t get_msg_type(void *msg);

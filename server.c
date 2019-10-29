@@ -16,7 +16,7 @@ int main(int argc, char* argv[]){
 	}
 
 	/* Creazione del socket */
-	sd = socket(AF_INET, SOCK_DGRAM, 0);
+	sd = socket(AF_INET, SOCK_DGRAM | SOCK_NONBLOCK, 0);
 
 	/* Creazione della struttura dati per l'indirizzo del server'*/
 	memset(&my_addr, 0, sizeof(my_addr));
