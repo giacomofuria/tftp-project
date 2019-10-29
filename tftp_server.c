@@ -10,9 +10,10 @@ int main(int argc, char* argv[]){
 	/* Gestione porte */
 	if(argc == 3){
 		porta = atoi(argv[1]);
-		printf("Server in ascolto sulla porta: %d\n",porta);
+		
 		strcpy(directory, argv[2]);
-		printf("Directory: \"%s\"\n",directory);
+		printf("\nServer in ascolto sulla porta: %d\n",porta);
+		printf("Directory: \"%s\"\n\n",directory);
 	}else{
 		printf("Errore! Inserisci tutti i parametri necessari\n");
 		exit(0);
@@ -52,21 +53,22 @@ int main(int argc, char* argv[]){
 			struct req_msg *richiesta;
 			richiesta = (struct req_msg*) msg;
 			printf("\nRicevuto un nuovo messaggio RRQ %d\n",opcode);
+			print_req_msg(opcode, richiesta);
 			// ricerca del file ed invio del file
 			
 	}else if(opcode == ERROR){
 			struct err_msg* errore = (struct err_msg*) msg;
 			printf("\nRicevuto un messaggio di errore %d\n",opcode);
+			print_err_msg(errore);
 			// vedere operazioni necessarie
 			
 	}else{
 		/* Qui il server riceve un messaggio con un opcode non valido e deve inviare 
 		   un messaggio di errore "Illegal TFTP Operation"
 		*/
-		
+		printf("\nRicevuto un messaggio non valido\n");
+		send_error(4,"Illegal TFTP Operation",sd,&cl_addr);
 	}
-
-	print_msg(opcode, msg);
 	
 	close(sd);
 

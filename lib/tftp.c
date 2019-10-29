@@ -1,5 +1,11 @@
 #include "tftp.h"
 
+char *help="Sono disponibili i seguenti comandi:\n";
+char *help_help =" !help --> mostra l'elenco dei comandi disponibili\n";
+char *help_mode = " !mode {txt|bin} --> imposta il modo di trasferimento dei files (testo o binario)\n";
+char *help_get = " !get filename nome_locale --> richiede al server il nome del file <filename> e lo salva localmente con il nome <nome_locale>\n";
+char *help_quit = " !quit --> termina il client\n";
+
 void stampaIndirizzo(struct sockaddr_in str){
 	int porta = ntohs(str.sin_port);
 	char indirizzo[INET_ADDRSTRLEN];
@@ -23,13 +29,17 @@ void stampa_stringa(char * s, int dim){
 }
 
 void print_req_msg(int opcode, struct req_msg* msg){
-	printf("opcode=%d | filename=%s | mode=%s",msg->opcode,msg->filename,msg->mode);
+	printf("\n| ");
+	printf("opcode=%d | filename=\"%s\" | mode=\"%s\"",msg->opcode,msg->filename,msg->mode);
+	printf(" |\n\n");
 }
 void print_err_msg(struct err_msg *err){
-	printf("opcode=%d | number=%d | message=%s",err->opcode, err->err_num, err->err_msg);
+	printf("\n| ");
+	printf("opcode=%d | number=%d | message=\"%s\"",err->opcode, err->err_num, err->err_msg);
+	printf(" |\n\n");
 }
 void print_msg(int opcode, void* data){
-	printf("\n| ");
+	
 	switch(opcode){
 		case RRQ:
 			print_req_msg(RRQ, (struct req_msg*)data);
@@ -42,7 +52,6 @@ void print_msg(int opcode, void* data){
 		default:
 			break;
 	}
-	printf(" |\n\n");
 }
 
 /* Serializza i campi della struttura req_msq e costruisce il buffer di invio.
@@ -163,6 +172,7 @@ void* deserialize(int opcode, char* buffer){
 			deserialize_error(buffer, (struct err_msg*)msg);
 			break;
 		default:
+			msg = NULL;
 			break;
 	}
 	return msg;
@@ -222,26 +232,22 @@ void* recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_ad
 		ret = recvfrom(sd, buffer, MAX_BUF_SIZE, 0, cl_addr,cl_addrlen);
 	}while(ret < 0);
 
-	printf("Richiesta ricevuta correttamente, ricevuti %d byte\n",ret);
-	
+	printf("Messaggio ricevuto correttamente, ricevuti %d byte\n",ret);
+
 	memcpy(opcode, buffer, sizeof(*opcode));
 	*opcode = ntohs(*opcode);
 
 	msg = deserialize(*opcode, buffer);
-	
 	//print_msg(*opcode, msg); // DEBUG
 
 	return msg;
 }
-/*
-uint16_t get_msg_type(void *msg){
-	uint16_t opcode;
-	if(msg==0 || msg == NULL)
-		return -1;
-	memcpy(&opcode, msg, sizeof(opcode));
-	return opcode;
+
+/* Funzioni per l'interfaccia del client */
+
+void show_help(){
+	printf("\n%s %s %s %s %s \n",help,help_help, help_mode,help_get, help_quit);
 }
-*/
 
 
 
