@@ -9,6 +9,12 @@ int main(int argc, char* argv[]){
 	char cmd[MAX_CMD_LENGTH];
 	char mode[MAX_MODE_LENGTH];
 	strcpy(mode, "octet"); // di default uso il modo di trasferimento binario
+	
+	char buffer[MAX_BUF_SIZE];
+	void* msg;
+	uint16_t opcode;
+	socklen_t addrlen;
+	
 	printf("Ci sono %d argomenti\n",argc);
 	if(argc >= 3){	
 		printf("Indirizzo del server: %s\n",argv[1]);
@@ -37,7 +43,7 @@ int main(int argc, char* argv[]){
 	sv_addr.sin_family = AF_INET;
 	sv_addr.sin_port = htons(atoi(argv[2]));
 	inet_pton(AF_INET, argv[1], &sv_addr.sin_addr);
-	
+	addrlen = sizeof(sv_addr);
 	stampaIndirizzo(sv_addr);
 	
 	show_help();
@@ -68,21 +74,31 @@ int main(int argc, char* argv[]){
 						memset(mode, 0, MAX_MODE_LENGTH); // ripulisco la stringa
 						if(strcmp(componenti[1],"bin\n")==0){
 							strcpy(mode, "octet");
+							printf("Modo di trasferimento binario configurato\n");
 						}else{
 							strcpy(mode, "netascii");
+							printf("Modo di trasferimento testuale configurato\n");
 						}
-						printf("mode impostato a:%s\n",mode);
 					}else{
 						print_err("inserisci correttamente il modo di trasferimento {txt|bin}");
 					}
 					break;
 				case 2:
 					if(i==3){
-						printf("get di %s e salva in %s\n",componenti[1],componenti[2]);
+						//printf("get di %s e salva in %s\n",componenti[1],componenti[2]);
 						// invio il messaggio di richiesta al server
 						send_request(RRQ, componenti[1],mode, sd, &sv_addr);
 						printf("Richiesta file %s al server in corso.\n",componenti[1]);
 						// Attendo una risposta dal server: positivo o negativo
+						msg = recv_msg(sd, buffer, (struct sockaddr*)&sv_addr,(socklen_t*)&addrlen, &opcode);
+						if(msg != NULL){
+							if(opcode == ERROR){
+								struct err_msg* errore = (struct err_msg*) msg;
+								printf("File non trovato.\n");
+								// vedere operazioni necessarie
+			
+							}
+						}
 					}else{
 						print_err("inserisci i parametri di get correttamente");
 					}

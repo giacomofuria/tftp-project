@@ -48,13 +48,17 @@ int main(int argc, char* argv[]){
 	   una copia di cl_addr per sapere a chi inviare i dati o i messaggi di errore */	
 	
 	/* In base al valore di opcode, il server deve cambiare comportamento (posso mettere uno switch-case) */
-	
+
 	if(opcode == RRQ){
 			struct req_msg *richiesta;
 			richiesta = (struct req_msg*) msg;
 			printf("\nRicevuto un nuovo messaggio RRQ %d\n",opcode);
 			print_req_msg(opcode, richiesta);
 			// ricerca del file ed invio del file
+			
+			// simulo che il file non sia presente
+			send_error(1,"File not found",sd,&cl_addr);
+			
 			
 	}else if(opcode == ERROR){
 			struct err_msg* errore = (struct err_msg*) msg;
@@ -63,9 +67,7 @@ int main(int argc, char* argv[]){
 			// vedere operazioni necessarie
 			
 	}else{
-		/* Qui il server riceve un messaggio con un opcode non valido e deve inviare 
-		   un messaggio di errore "Illegal TFTP Operation"
-		*/
+		// ricezione messaggio con opcode non valido
 		printf("\nRicevuto un messaggio non valido\n");
 		send_error(4,"Illegal TFTP Operation",sd,&cl_addr);
 	}

@@ -196,9 +196,9 @@ void send_request(int opcode, char* filename, char* mode, int sd, struct sockadd
 		perror("Errore invio richiesta");
 		exit(0);
 	}else{
-		printf("Richiesta inviata correttamente, inviati %d byte\n",ret);
+		//printf("Richiesta inviata correttamente, inviati %d byte\n",ret); // DEBUG
 	}
-	print_msg(RRQ, &richiesta);
+	//print_msg(RRQ, &richiesta); // DEBUG
 }
 
 void send_error(uint16_t number, char* message, int sd, struct sockaddr_in* sv_addr){
@@ -218,9 +218,9 @@ void send_error(uint16_t number, char* message, int sd, struct sockaddr_in* sv_a
 		perror("Errore invio richiesta");
 		exit(0);
 	}else{
-		printf("Richiesta inviata correttamente, inviati %d byte\n",ret);
+		//printf("Richiesta inviata correttamente, inviati %d byte\n",ret);
 	}
-	print_msg(ERROR, &errore);
+	//print_msg(ERROR, &errore); // DEBUG
 }
 
 /* Riceve un messaggio generico, legge il campo opcode e lo restituisce. Scrivere
@@ -232,7 +232,7 @@ void* recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_ad
 		ret = recvfrom(sd, buffer, MAX_BUF_SIZE, 0, cl_addr,cl_addrlen);
 	}while(ret < 0);
 
-	printf("Messaggio ricevuto correttamente, ricevuti %d byte\n",ret);
+	//printf("Messaggio ricevuto correttamente, ricevuti %d byte\n",ret); // DEBUG
 
 	memcpy(opcode, buffer, sizeof(*opcode));
 	*opcode = ntohs(*opcode);
