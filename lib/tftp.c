@@ -178,6 +178,17 @@ void* deserialize(int opcode, char* buffer){
 	return msg;
 }
 
+void send_data(FILE *file_ptr, int sd, struct sockaddr_in* sv_addr){
+	uint16_t block_number = 0;
+	struct data_msg data;
+	
+	// ciclo
+	
+	data.opcode = DATA;
+	data.block_numer = block_number++;
+
+}
+
 void send_request(int opcode, char* filename, char* mode, int sd, struct sockaddr_in* sv_addr){
 	int ret, len;
 	char buf[MAX_BUF_SIZE];

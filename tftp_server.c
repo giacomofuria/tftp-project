@@ -66,6 +66,7 @@ int main(int argc, char* argv[]){
 			}else{
 				file_ptr = fopen(directory, "r");
 			}
+			
 			char c;
 			int num_bytes=0;
 			while(!feof(file_ptr)){
@@ -78,6 +79,7 @@ int main(int argc, char* argv[]){
 				}
 			}
 			printf("File composto da %d\n byte\n",num_bytes);
+			
 			// al termine dell'invio del file chiudo il descrittore
 			fclose(file_ptr);
 			
