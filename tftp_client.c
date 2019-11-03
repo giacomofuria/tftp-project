@@ -39,7 +39,25 @@ int main(int argc, char* argv[]){
 	
 	show_help();
 
-	client_run();
+
+	char cmd[MAX_CMD_LENGTH];
+	int mode = TXT; // di default imposto il modo di trasferimento testuale
+	while(1){
+	
+		printf("> ");
+		scanf("%s",cmd);
+		//printf("\nHai inserito il comando: %s\n\n",cmd); // DEBUG
+		if(strcmp(cmd,"!help")==0)
+			show_help();
+		if(strcmp(cmd,"!mode")==0)
+			printf("hai scritto mode");
+		if(strcmp(cmd,"!get")==0)
+			printf("hai scritto get");
+		if(strcmp(cmd,"!quit")==0)
+			break;
+
+	}
+
 
 	send_request(RRQ, "giacomo.bin","octet", sd, &sv_addr);
 	//send_error(1,"File not found",sd,&sv_addr);

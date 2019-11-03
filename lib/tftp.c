@@ -249,26 +249,6 @@ void show_help(){
 	printf("\n%s %s %s %s %s \n",help,help_help, help_mode,help_get, help_quit);
 }
 
-/* Funzione che contiene il comportamento del client */
-void client_run(){
-	char cmd[MAX_CMD_LENGTH];
-	while(1){
-	
-		printf("> ");
-		scanf("%s",cmd);
-		//printf("\nHai inserito il comando: %s\n\n",cmd); // DEBUG
-		if(strcmp(cmd,"!help")==0)
-			show_help();
-		if(strcmp(cmd,"!mode")==0)
-			printf("hai scritto mode");
-		if(strcmp(cmd,"!get")==0)
-			printf("hai scritto get");
-		if(strcmp(cmd,"!quit")==0)
-			break;
-
-	}
-}
-
 void print_err(char * msg){
 	printf("Errore: %s\n",msg);
 }
