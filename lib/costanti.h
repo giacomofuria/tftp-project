@@ -4,6 +4,7 @@
 #define MAX_ERROR_LENGTH	128
 #define BLOCK_SIZE			512
 #define MAX_DIR_LENGTH 		512
+#define MAX_CMD_LENGTH		128
 
 // OPCODES
 #define RRQ		1
@@ -22,3 +23,7 @@
 // ERROR NUMBERS
 #define FILE_NOT_FOUND				1
 #define	ILLEGAL_TFTP_OPERATION		4
+
+// CLIENT MODES
+#define TXT		0
+#define	BIN		1

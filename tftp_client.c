@@ -3,7 +3,7 @@
 
 int main(int argc, char* argv[]){
 	int ret, sd;
-
+	
 	struct sockaddr_in my_addr, sv_addr;
 
 	printf("Ci sono %d argomenti\n",argc);
@@ -38,6 +38,8 @@ int main(int argc, char* argv[]){
 	stampaIndirizzo(sv_addr);
 	
 	show_help();
+
+	client_run();
 
 	send_request(RRQ, "giacomo.bin","octet", sd, &sv_addr);
 	//send_error(1,"File not found",sd,&sv_addr);
