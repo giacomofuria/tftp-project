@@ -67,14 +67,17 @@ int main(int argc, char* argv[]){
 				file_ptr = fopen(directory, "r");
 			}
 			char c;
+			int num_bytes=0;
 			while(!feof(file_ptr)){
 				c = fgetc(file_ptr);
 				if(c == EOF)
 					printf("Fine file\n");
-				else
-					printf("%c",c);
+				else{
+					//printf("%c",c);
+					num_bytes++;
+				}
 			}
-			
+			printf("File composto da %d\n byte\n",num_bytes);
 			// al termine dell'invio del file chiudo il descrittore
 			fclose(file_ptr);
 			
