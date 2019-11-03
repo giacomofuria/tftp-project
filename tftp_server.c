@@ -47,7 +47,7 @@ int main(int argc, char* argv[]){
 	/* Quando implementerò la versione multi-processo il processo dovrà prendere 
 	   una copia di cl_addr per sapere a chi inviare i dati o i messaggi di errore */	
 	
-	/* In base al valore di opcode, il server deve cambiare comportamento */
+	/* In base al valore di opcode, il server deve cambiare comportamento (posso mettere uno switch-case) */
 	
 	if(opcode == RRQ){
 			struct req_msg *richiesta;

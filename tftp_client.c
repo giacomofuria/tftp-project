@@ -7,7 +7,8 @@ int main(int argc, char* argv[]){
 	struct sockaddr_in my_addr, sv_addr;
 
 	char cmd[MAX_CMD_LENGTH];
-	int mode; // di default imposto il modo di trasferimento testuale
+	char mode[MAX_MODE_LENGTH];
+	strcpy(mode, "octet"); // di default uso il modo di trasferimento binario
 	printf("Ci sono %d argomenti\n",argc);
 	if(argc >= 3){	
 		printf("Indirizzo del server: %s\n",argv[1]);
@@ -64,12 +65,13 @@ int main(int argc, char* argv[]){
 					break;
 				case 1:
 					if(i==2 && (strcmp(componenti[1],"bin\n")==0 || strcmp(componenti[1],"txt\n")==0)){
+						memset(mode, 0, MAX_MODE_LENGTH); // ripulisco la stringa
 						if(strcmp(componenti[1],"bin\n")==0){
-							mode = BIN;
+							strcpy(mode, "octet");
 						}else{
-							mode = TXT;
+							strcpy(mode, "netascii");
 						}
-						printf("mode impostato a:%s\n",componenti[1]);
+						printf("mode impostato a:%s\n",mode);
 					}else{
 						print_err("inserisci correttamente il modo di trasferimento {txt|bin}");
 					}
@@ -77,6 +79,10 @@ int main(int argc, char* argv[]){
 				case 2:
 					if(i==3){
 						printf("get di %s e salva in %s\n",componenti[1],componenti[2]);
+						// invio il messaggio di richiesta al server
+						send_request(RRQ, componenti[1],mode, sd, &sv_addr);
+						printf("Richiesta file %s al server in corso.\n",componenti[1]);
+						// Attendo una risposta dal server: positivo o negativo
 					}else{
 						print_err("inserisci i parametri di get correttamente");
 					}
@@ -95,7 +101,7 @@ int main(int argc, char* argv[]){
 	}
 
 
-	send_request(RRQ, "giacomo.bin","octet", sd, &sv_addr);
+	//send_request(RRQ, "giacomo.bin","octet", sd, &sv_addr);
 	//send_error(1,"File not found",sd,&sv_addr);
 	
 	close(sd);

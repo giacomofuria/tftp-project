@@ -23,7 +23,3 @@
 // ERROR NUMBERS
 #define FILE_NOT_FOUND				1
 #define	ILLEGAL_TFTP_OPERATION		4
-
-// CLIENT MODES
-#define TXT		0
-#define	BIN		1
