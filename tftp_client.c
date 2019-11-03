@@ -3,7 +3,7 @@
 
 int main(int argc, char* argv[]){
 	int ret, sd;
-	
+	int flag = 1;
 	struct sockaddr_in my_addr, sv_addr;
 
 	char cmd[MAX_CMD_LENGTH];
@@ -40,12 +40,11 @@ int main(int argc, char* argv[]){
 	stampaIndirizzo(sv_addr);
 	
 	show_help();
-
 	
-	while(1){
+	while(flag){
 	
 		printf("> ");
-		memset(cmd, 0, MAX_CMD_LENGTH);
+		memset(cmd, 0, MAX_CMD_LENGTH); // pulizia della stringa contenente il comando
 		fgets(cmd, MAX_CMD_LENGTH, stdin); // leggo una riga intera
 		char delim[] = " ";
 		char *componenti[3];
@@ -57,16 +56,12 @@ int main(int argc, char* argv[]){
 			ptr = strtok(NULL,delim);
 			i++;
 		}
-		if(strcmp(cmd,"!help\n")==0){
-			show_help();
-			continue;
-		}
-		if(strcmp(cmd,"!quit\n")==0)
-			break;
 		if(componenti[0] != NULL){
-			stampa_stringa(componenti[0],10);
 			int cmd_code = get_cmd_code(componenti[0]);
 			switch(cmd_code){
+				case 0:
+					show_help();
+					break;
 				case 1:
 					if(i==2 && (strcmp(componenti[1],"bin\n")==0 || strcmp(componenti[1],"txt\n")==0)){
 						if(strcmp(componenti[1],"bin\n")==0){
@@ -85,6 +80,9 @@ int main(int argc, char* argv[]){
 					}else{
 						print_err("inserisci i parametri di get correttamente");
 					}
+					break;
+				case 3:
+					flag=0;
 					break;
 				default: 
 					print_err("inserisci un comando valido");	
