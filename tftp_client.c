@@ -97,6 +97,8 @@ int main(int argc, char* argv[]){
 								printf("File non trovato.\n");
 								// vedere operazioni necessarie
 			
+							}else if(opcode == DATA){
+								printf("Trasferimento dei file in corso.\n");
 							}
 						}
 					}else{

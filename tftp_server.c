@@ -57,8 +57,26 @@ int main(int argc, char* argv[]){
 			// ricerca del file ed invio del file
 			
 			// simulo che il file non sia presente
-			send_error(1,"File not found",sd,&cl_addr);
+			//send_error(1,"File not found",sd,&cl_addr);
+			FILE *file_ptr;
+			strcat(directory,richiesta->filename);
+			printf("dir: %s\n",directory);
+			if(strcmp(richiesta->mode, "octet")==0){
+				file_ptr = fopen(directory, "rb");
+			}else{
+				file_ptr = fopen(directory, "r");
+			}
+			char c;
+			while(!feof(file_ptr)){
+				c = fgetc(file_ptr);
+				if(c == EOF)
+					printf("Fine file\n");
+				else
+					printf("%c",c);
+			}
 			
+			// al termine dell'invio del file chiudo il descrittore
+			fclose(file_ptr);
 			
 	}else if(opcode == ERROR){
 			struct err_msg* errore = (struct err_msg*) msg;
