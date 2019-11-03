@@ -57,3 +57,4 @@ void* recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_ad
 /* Funzioni per l'interfaccia del client*/
 void show_help();
 void print_err();
+int get_cmd_code();

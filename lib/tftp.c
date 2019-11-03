@@ -252,6 +252,17 @@ void show_help(){
 void print_err(char * msg){
 	printf("Errore: %s\n",msg);
 }
+int get_cmd_code(char* cmd){
+	if(strcmp(cmd,"!help\n")==0)
+		return 0;
+	if(strcmp(cmd,"!mode")==0)
+		return 1;
+	if(strcmp(cmd,"!get")==0)
+		return 2;
+	if(strcmp(cmd,"!quit\n")==0)
+		return 3;
+	return -1;
+}
 
 
 

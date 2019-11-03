@@ -6,6 +6,8 @@ int main(int argc, char* argv[]){
 	
 	struct sockaddr_in my_addr, sv_addr;
 
+	char cmd[MAX_CMD_LENGTH];
+	int mode; // di default imposto il modo di trasferimento testuale
 	printf("Ci sono %d argomenti\n",argc);
 	if(argc >= 3){	
 		printf("Indirizzo del server: %s\n",argv[1]);
@@ -39,22 +41,58 @@ int main(int argc, char* argv[]){
 	
 	show_help();
 
-
-	char cmd[MAX_CMD_LENGTH];
-	int mode = TXT; // di default imposto il modo di trasferimento testuale
+	
 	while(1){
 	
 		printf("> ");
-		scanf("%s",cmd);
-		//printf("\nHai inserito il comando: %s\n\n",cmd); // DEBUG
-		if(strcmp(cmd,"!help")==0)
+		memset(cmd, 0, MAX_CMD_LENGTH);
+		fgets(cmd, MAX_CMD_LENGTH, stdin); // leggo una riga intera
+		char delim[] = " ";
+		char *componenti[3];
+		int i=0;
+		char *ptr = strtok(cmd,delim);
+		while(ptr != NULL){
+			componenti[i] = ptr; 
+			//printf("%s\n",ptr); // DEBUG
+			ptr = strtok(NULL,delim);
+			i++;
+		}
+		if(strcmp(cmd,"!help\n")==0){
 			show_help();
-		if(strcmp(cmd,"!mode")==0)
-			printf("hai scritto mode");
-		if(strcmp(cmd,"!get")==0)
-			printf("hai scritto get");
-		if(strcmp(cmd,"!quit")==0)
+			continue;
+		}
+		if(strcmp(cmd,"!quit\n")==0)
 			break;
+		if(componenti[0] != NULL){
+			stampa_stringa(componenti[0],10);
+			int cmd_code = get_cmd_code(componenti[0]);
+			switch(cmd_code){
+				case 1:
+					if(i==2 && (strcmp(componenti[1],"bin\n")==0 || strcmp(componenti[1],"txt\n")==0)){
+						if(strcmp(componenti[1],"bin\n")==0){
+							mode = BIN;
+						}else{
+							mode = TXT;
+						}
+						printf("mode impostato a:%s\n",componenti[1]);
+					}else{
+						print_err("inserisci correttamente il modo di trasferimento {txt|bin}");
+					}
+					break;
+				case 2:
+					if(i==3){
+						printf("get di %s e salva in %s\n",componenti[1],componenti[2]);
+					}else{
+						print_err("inserisci i parametri di get correttamente");
+					}
+					break;
+				default: 
+					print_err("inserisci un comando valido");	
+					break;
+			}
+		}else{
+			print_err("inserisci un comando valido");
+		}
 
 	}
 
