@@ -9,11 +9,9 @@ int main(int argc, char* argv[]){
 	char cmd[MAX_CMD_LENGTH];
 	char mode[MAX_MODE_LENGTH];
 	strcpy(mode, "octet"); // di default uso il modo di trasferimento binario
+	int mode_num = BIN;
 	
 	char buffer[MAX_BUF_SIZE];
-	void* msg;
-	uint16_t opcode;
-	socklen_t addrlen;
 	
 	printf("Ci sono %d argomenti\n",argc);
 	if(argc >= 3){	
@@ -43,7 +41,6 @@ int main(int argc, char* argv[]){
 	sv_addr.sin_family = AF_INET;
 	sv_addr.sin_port = htons(atoi(argv[2]));
 	inet_pton(AF_INET, argv[1], &sv_addr.sin_addr);
-	addrlen = sizeof(sv_addr);
 	stampaIndirizzo(sv_addr);
 	
 	show_help();
@@ -74,9 +71,11 @@ int main(int argc, char* argv[]){
 						memset(mode, 0, MAX_MODE_LENGTH); // ripulisco la stringa
 						if(strcmp(componenti[1],"bin\n")==0){
 							strcpy(mode, "octet");
+							mode_num=BIN;
 							printf("Modo di trasferimento binario configurato\n");
 						}else{
 							strcpy(mode, "netascii");
+							mode_num=TXT;
 							printf("Modo di trasferimento testuale configurato\n");
 						}
 					}else{
@@ -90,33 +89,12 @@ int main(int argc, char* argv[]){
 						// invio il messaggio di richiesta al server
 						send_request(RRQ, componenti[1],mode, sd, &sv_addr);
 						printf("Richiesta file %s al server in corso.\n",componenti[1]);
+						
+						
 						// Attendo una risposta dal server: positivo o negativo
-						msg = recv_msg(sd, buffer, (struct sockaddr*)&sv_addr,(socklen_t*)&addrlen, &opcode);
-						if(msg != NULL){
-							if(opcode == ERROR){
-								struct err_msg* errore = (struct err_msg*) msg;
-								printf("File non trovato.\n");
-								// vedere operazioni necessarie
-			
-							}else if(opcode == DATA){
-								struct data_msg* data = (struct data_msg*) msg;
-								printf("Trasferimento dei file in corso.\n");
-								// il messaggio ricevuto è già un pacchetto dati
-								//print_data_msg(data); // DEBUG
-								
-								 // test
-								msg = recv_msg(sd, buffer, (struct sockaddr*)&sv_addr,(socklen_t*)&addrlen, &opcode);
-								msg = recv_msg(sd, buffer, (struct sockaddr*)&sv_addr,(socklen_t*)&addrlen, &opcode);
-								msg = recv_msg(sd, buffer, (struct sockaddr*)&sv_addr,(socklen_t*)&addrlen, &opcode);
-								msg = recv_msg(sd, buffer, (struct sockaddr*)&sv_addr,(socklen_t*)&addrlen, &opcode);
-								
-								
-								// il client deve ciclare fino a quando arrivano pacchetti data con dimensione 
-								/// uguale a 512 byte, appena ne arriva uno di dimensione minore è l'ultimo.
-								
-								
-							}
-						}
+						recv_data(sd, buffer, &sv_addr, mode_num);
+						
+						
 					}else{
 						print_err("inserisci i parametri di get correttamente");
 					}
@@ -133,7 +111,6 @@ int main(int argc, char* argv[]){
 		}
 
 	}
-
 
 	//send_request(RRQ, "giacomo.bin","octet", sd, &sv_addr);
 	//send_error(1,"File not found",sd,&sv_addr);

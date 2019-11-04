@@ -69,10 +69,10 @@ int main(int argc, char* argv[]){
 				mode = TXT;
 			}
 			if(file_ptr == NULL || file_ptr == 0){
-				printf("File \"%s\"non trovato \n",directory);
+				printf("File \"%s\" non trovato \n",directory);
 				send_error(1,"File not found",sd,&cl_addr);
 			}else{
-				printf("File \"%s\"trovato. \nInvio il file\n",directory);
+				printf("File \"%s\" trovato. \nInvio il file\n",directory);
 				send_data(file_ptr, mode, sd, &cl_addr);
 				
 				fclose(file_ptr);

@@ -240,9 +240,10 @@ void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr){
 			if(data.data[data.num_bytes] == EOF)
 				data.data[data.num_bytes]='\0'; // Quando incontro l'EOF aggiungo un \0 per deserializzare
 				//printf("Fine file\n");
+			//printf("byte-%d %x \n",data.num_bytes,data.data[data.num_bytes]); // DEBUG
 			data.num_bytes++;
 			if(data.num_bytes == BLOCK_SIZE){
-				printf("Blocco %d %d\n",data.block_number, data.num_bytes);
+				printf("\nBlocco %d %d\n\n",data.block_number, data.num_bytes);
 				len = serialize_data(&data, buf);
 				ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
 				if(ret < 0){
@@ -333,6 +334,37 @@ void* recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_ad
 	print_msg(*opcode, msg); // DEBUG
 
 	return msg;
+}
+/* Funzione che riceve i dati dal server e li memorizza nel client. 
+   Se riceve un messaggio di errore esce 
+ */
+void recv_data(int sd, char* buffer, struct sockaddr_in *sv_addr, int mode){
+
+	uint16_t opcode, received_block;
+	socklen_t addrlen = sizeof(*sv_addr);
+	received_block = 0;
+	while(1){
+		void* msg = recv_msg(sd, buffer, (struct sockaddr*)sv_addr,&addrlen, &opcode);
+		if(msg != NULL){
+			if(opcode == ERROR){
+				//struct err_msg* errore = (struct err_msg*) msg;
+				printf("File non trovato.\n");
+				// vedere operazioni necessarie
+				break;
+			}else if(opcode == DATA){
+				struct data_msg* data = (struct data_msg*) msg;
+				if(data->block_number==0)
+					printf("Trasferimento file in corso.\n");
+				printf("Ricevuto il blocco %d\n",data->block_number);
+				received_block++;
+				if(data->num_bytes < BLOCK_SIZE){
+					printf("Trasferimento completato (%d/%d blocchi)\n",received_block,(data->block_number+1));
+					break;
+				}		
+			}
+		}	
+	}
+	
 }
 
 /* Funzioni per l'interfaccia del client */
