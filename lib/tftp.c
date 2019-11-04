@@ -199,8 +199,10 @@ void* deserialize(int opcode, char* buffer){
 	}
 	return msg;
 }
-
-void send_data(FILE *file_ptr, int sd, struct sockaddr_in* sv_addr){
+/* 	Funzione che legge dal file i dati e invia messaggi di tipo data al client.
+	Sono sicuro che il file sia presente e sia stato aperto correttamente
+*/
+void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr){
 	int ret, len;
 	struct data_msg data;
 	char buf[MAX_DATA_SIZE]; // risultato della serialize_data
@@ -211,7 +213,7 @@ void send_data(FILE *file_ptr, int sd, struct sockaddr_in* sv_addr){
 	data.block_number=0;
 
 	data.num_bytes=0; // contatore dei byte di un blocco e indice all'interno del blocco
-	
+	/*
 	while(!feof(file_ptr)){
 		data.data[data.num_bytes] = fgetc(file_ptr);
 		//if(data.data[data.num_bytes] == EOF)
@@ -239,6 +241,7 @@ void send_data(FILE *file_ptr, int sd, struct sockaddr_in* sv_addr){
 			exit(0);
 		}
 	}
+	*/
 	//printf("File composto da %d byte\n",data.num_bytes);
 }
 

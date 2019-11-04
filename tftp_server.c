@@ -61,16 +61,26 @@ int main(int argc, char* argv[]){
 			FILE *file_ptr;
 			strcat(directory,richiesta->filename);
 			printf("dir: %s\n",directory);
+			int mode;
 			if(strcmp(richiesta->mode, "octet")==0){
 				file_ptr = fopen(directory, "rb");
+				mode = BIN;
 			}else{
 				file_ptr = fopen(directory, "r");
+				mode = TXT;
+			}
+			if(file_ptr == NULL || file_ptr == 0){
+				printf("File \"%s\"non trovato \n",directory);
+				send_error(1,"File not found",sd,&cl_addr);
+			}else{
+				printf("File \"%s\"trovato. \nInvio il file\n",directory);
+				send_data(file_ptr, mode, sd, &cl_addr);
+				
+				// al termine dell'invio del file chiudo il descrittore
+				fclose(file_ptr);
 			}
 			
-			send_data(file_ptr, sd, &cl_addr);
 			
-			// al termine dell'invio del file chiudo il descrittore
-			fclose(file_ptr);
 			
 	}else if(opcode == ERROR){
 			struct err_msg* errore = (struct err_msg*) msg;

@@ -50,7 +50,7 @@ void* deserialize(int opcode, char* buffer);
 
 
 /* Funzioni per l'invio di messaggi */
-void send_data(FILE *file_ptr, int sd, struct sockaddr_in* sv_addr);
+void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr);
 void send_request(int opcode, char* filename, char* mode, int sd, struct sockaddr_in* sv_addr);
 void send_error(uint16_t number, char* message, int sd, struct sockaddr_in* sv_addr);
 
