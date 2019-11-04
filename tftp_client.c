@@ -103,11 +103,17 @@ int main(int argc, char* argv[]){
 								printf("Trasferimento dei file in corso.\n");
 								// il messaggio ricevuto è già un pacchetto dati
 								//print_data_msg(data); // DEBUG
-								// test
+								
+								 // test
 								msg = recv_msg(sd, buffer, (struct sockaddr*)&sv_addr,(socklen_t*)&addrlen, &opcode);
 								msg = recv_msg(sd, buffer, (struct sockaddr*)&sv_addr,(socklen_t*)&addrlen, &opcode);
 								msg = recv_msg(sd, buffer, (struct sockaddr*)&sv_addr,(socklen_t*)&addrlen, &opcode);
 								msg = recv_msg(sd, buffer, (struct sockaddr*)&sv_addr,(socklen_t*)&addrlen, &opcode);
+								
+								
+								// il client deve ciclare fino a quando arrivano pacchetti data con dimensione 
+								/// uguale a 512 byte, appena ne arriva uno di dimensione minore è l'ultimo.
+								
 								
 							}
 						}

@@ -31,6 +31,7 @@ void print_data_msg(struct data_msg* data){
 	printf("\n| ");
 	printf("opcode=%d | block number=%d | data=\"%s\"",data->opcode,data->block_number,data->data);
 	printf(" |\n\n");
+	printf("Byte nel blocco: %d\n",data->num_bytes);
 }
 void print_req_msg(int opcode, struct req_msg* msg){
 	printf("\n| ");
@@ -154,8 +155,12 @@ void deserialize_data(char *buffer, struct data_msg* data){
 	data->block_number = ntohs(data->block_number);
 	pos+=sizeof(data->block_number);
 	
+	/* Copia al max 512 byte, nel caso siano di meno si ferma al terminatore. */
 	strncpy(data->data, buffer+pos, BLOCK_SIZE);
 	pos+=strlen(data->data)+1;
+	
+	// aggiungere il valore al campo num_bytes della struttura oppure vedere se è deducibile con strlen
+	data->num_bytes=strlen(data->data);
 }
 
 void deserialize_request(char* buffer, struct req_msg* req){
@@ -224,9 +229,7 @@ void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr){
 	int ret, len;
 	struct data_msg data;
 	char buf[MAX_DATA_SIZE]; // risultato della serialize_data
-	
-	// ciclo
-	
+
 	data.opcode = DATA;
 	data.block_number=0;
 
@@ -235,7 +238,7 @@ void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr){
 		while(!feof(file_ptr)){
 			data.data[data.num_bytes] = fgetc(file_ptr);
 			if(data.data[data.num_bytes] == EOF)
-				data.data[data.num_bytes]='\0';
+				data.data[data.num_bytes]='\0'; // Quando incontro l'EOF aggiungo un \0 per deserializzare
 				//printf("Fine file\n");
 			data.num_bytes++;
 			if(data.num_bytes == BLOCK_SIZE){
@@ -260,6 +263,9 @@ void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr){
 				exit(0);
 			}
 		}
+	}else{
+		// lettura e invio in modo binario
+		
 	}
 	//printf("File composto da %d byte\n",data.num_bytes);
 }
