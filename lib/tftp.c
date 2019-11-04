@@ -49,6 +49,7 @@ void print_msg(int opcode, void* data){
 			print_req_msg(RRQ, (struct req_msg*)data);
 			break;
 		case DATA:
+			print_data_msg((struct data_msg*)data);
 			break;
 		case ERROR:
 			print_err_msg((struct err_msg*)data);
@@ -142,10 +143,25 @@ int serialize(int opcode, void *data, char *buffer){
 	return ret;
 }
 
+void deserialize_data(char *buffer, struct data_msg* data){
+	int pos=0;
+	
+	memcpy(&data->opcode, buffer+pos, sizeof(data->opcode));
+	data->opcode = ntohs(data->opcode);
+	pos+=sizeof(data->opcode);
+	
+	memcpy(&data->block_number, buffer+pos, sizeof(data->block_number));
+	data->block_number = ntohs(data->block_number);
+	pos+=sizeof(data->block_number);
+	
+	strncpy(data->data, buffer+pos, BLOCK_SIZE);
+	pos+=strlen(data->data)+1;
+}
+
 void deserialize_request(char* buffer, struct req_msg* req){
 	int pos=0;
 	memcpy(&req->opcode, buffer+pos, sizeof(req->opcode));
-	req->opcode = htons(req->opcode);
+	req->opcode = ntohs(req->opcode);
 	pos+=sizeof(req->opcode);
 
 	strcpy(req->filename, buffer+pos);
@@ -165,11 +181,11 @@ void deserialize_error(char * buffer, struct err_msg* msg){
 	int pos=0;
 	
 	memcpy(&msg->opcode, buffer+pos, sizeof(msg->opcode));
-	msg->opcode = htons(msg->opcode);
+	msg->opcode = ntohs(msg->opcode);
 	pos+=sizeof(msg->opcode);
 
 	memcpy(&msg->err_num, buffer+pos, sizeof(msg->err_num));
-	msg->err_num = htons(msg->err_num);
+	msg->err_num = ntohs(msg->err_num);
 	pos+=sizeof(msg->err_num);
 
 	strcpy(msg->err_msg, buffer+pos);
@@ -188,6 +204,8 @@ void* deserialize(int opcode, char* buffer){
 			deserialize_request(buffer, (struct req_msg*)msg);
 			break;
 		case DATA:
+			msg = malloc(sizeof(struct data_msg));
+			deserialize_data(buffer, (struct data_msg*)msg);
 			break;
 		case ERROR:
 			msg = malloc(sizeof(struct err_msg));
@@ -213,35 +231,36 @@ void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr){
 	data.block_number=0;
 
 	data.num_bytes=0; // contatore dei byte di un blocco e indice all'interno del blocco
-	/*
-	while(!feof(file_ptr)){
-		data.data[data.num_bytes] = fgetc(file_ptr);
-		//if(data.data[data.num_bytes] == EOF)
-			//printf("Fine file\n");
-		data.num_bytes++;
-		if(data.num_bytes == BLOCK_SIZE){
-			printf("Blocco %d %d\n",data.block_number, data.num_bytes);
+	if(mode==TXT){
+		while(!feof(file_ptr)){
+			data.data[data.num_bytes] = fgetc(file_ptr);
+			if(data.data[data.num_bytes] == EOF)
+				data.data[data.num_bytes]='\0';
+				//printf("Fine file\n");
+			data.num_bytes++;
+			if(data.num_bytes == BLOCK_SIZE){
+				printf("Blocco %d %d\n",data.block_number, data.num_bytes);
+				len = serialize_data(&data, buf);
+				ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
+				if(ret < 0){
+					perror("Errore invio blocco");
+					exit(0);
+				}
+				data.num_bytes=0;
+				data.block_number++;
+			}
+		}
+		if(data.num_bytes > 0){
+			// ultimo blocco con dimensione < 512 byte
+			printf("Blocco %d %d byte\n",data.block_number, data.num_bytes);
 			len = serialize_data(&data, buf);
 			ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
 			if(ret < 0){
 				perror("Errore invio blocco");
 				exit(0);
 			}
-			data.num_bytes=0;
-			data.block_number++;
 		}
 	}
-	if(data.num_bytes > 0){
-		// ultimo blocco con dimensione < 512 byte
-		printf("Blocco %d %d\n",data.block_number, data.num_bytes);
-		len = serialize_data(&data, buf);
-		ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
-		if(ret < 0){
-			perror("Errore invio blocco");
-			exit(0);
-		}
-	}
-	*/
 	//printf("File composto da %d byte\n",data.num_bytes);
 }
 
@@ -299,13 +318,13 @@ void* recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_ad
 		ret = recvfrom(sd, buffer, MAX_BUF_SIZE, 0, cl_addr,cl_addrlen);
 	}while(ret < 0);
 
-	//printf("Messaggio ricevuto correttamente, ricevuti %d byte\n",ret); // DEBUG
+	printf("Messaggio ricevuto correttamente, ricevuti %d byte\n",ret); // DEBUG
 
 	memcpy(opcode, buffer, sizeof(*opcode));
 	*opcode = ntohs(*opcode);
 
 	msg = deserialize(*opcode, buffer);
-	//print_msg(*opcode, msg); // DEBUG
+	print_msg(*opcode, msg); // DEBUG
 
 	return msg;
 }

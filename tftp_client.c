@@ -99,7 +99,15 @@ int main(int argc, char* argv[]){
 								// vedere operazioni necessarie
 			
 							}else if(opcode == DATA){
+								struct data_msg* data = (struct data_msg*) msg;
 								printf("Trasferimento dei file in corso.\n");
+								// il messaggio ricevuto è già un pacchetto dati
+								//print_data_msg(data); // DEBUG
+								// test
+								msg = recv_msg(sd, buffer, (struct sockaddr*)&sv_addr,(socklen_t*)&addrlen, &opcode);
+								msg = recv_msg(sd, buffer, (struct sockaddr*)&sv_addr,(socklen_t*)&addrlen, &opcode);
+								msg = recv_msg(sd, buffer, (struct sockaddr*)&sv_addr,(socklen_t*)&addrlen, &opcode);
+								msg = recv_msg(sd, buffer, (struct sockaddr*)&sv_addr,(socklen_t*)&addrlen, &opcode);
 								
 							}
 						}

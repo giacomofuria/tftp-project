@@ -53,7 +53,6 @@ int main(int argc, char* argv[]){
 			struct req_msg *richiesta;
 			richiesta = (struct req_msg*) msg;
 			printf("\nRicevuto un nuovo messaggio RRQ %d\n",opcode);
-			print_req_msg(opcode, richiesta);
 			// ricerca del file ed invio del file
 			
 			// simulo che il file non sia presente
@@ -76,12 +75,9 @@ int main(int argc, char* argv[]){
 				printf("File \"%s\"trovato. \nInvio il file\n",directory);
 				send_data(file_ptr, mode, sd, &cl_addr);
 				
-				// al termine dell'invio del file chiudo il descrittore
 				fclose(file_ptr);
 			}
-			
-			
-			
+
 	}else if(opcode == ERROR){
 			struct err_msg* errore = (struct err_msg*) msg;
 			printf("\nRicevuto un messaggio di errore %d\n",opcode);
