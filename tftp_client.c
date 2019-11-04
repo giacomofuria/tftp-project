@@ -66,10 +66,10 @@ int main(int argc, char* argv[]){
 		if(componenti[0] != NULL){
 			int cmd_code = get_cmd_code(componenti[0]);
 			switch(cmd_code){
-				case 0:
+				case 0: // comando !help
 					show_help();
 					break;
-				case 1:
+				case 1: // comando !mode
 					if(i==2 && (strcmp(componenti[1],"bin\n")==0 || strcmp(componenti[1],"txt\n")==0)){
 						memset(mode, 0, MAX_MODE_LENGTH); // ripulisco la stringa
 						if(strcmp(componenti[1],"bin\n")==0){
@@ -83,9 +83,10 @@ int main(int argc, char* argv[]){
 						print_err("inserisci correttamente il modo di trasferimento {txt|bin}");
 					}
 					break;
-				case 2:
+				case 2: // comando !get
 					if(i==3){
-						//printf("get di %s e salva in %s\n",componenti[1],componenti[2]);
+						//printf("get di %s e salva in %s\n",componenti[1],componenti[2]); // DEBUG
+
 						// invio il messaggio di richiesta al server
 						send_request(RRQ, componenti[1],mode, sd, &sv_addr);
 						printf("Richiesta file %s al server in corso.\n",componenti[1]);
@@ -99,16 +100,17 @@ int main(int argc, char* argv[]){
 			
 							}else if(opcode == DATA){
 								printf("Trasferimento dei file in corso.\n");
+								
 							}
 						}
 					}else{
 						print_err("inserisci i parametri di get correttamente");
 					}
 					break;
-				case 3:
+				case 3: // comando !quit
 					flag=0;
 					break;
-				default: 
+				default: // nessun comando valido
 					print_err("inserisci un comando valido");	
 					break;
 			}

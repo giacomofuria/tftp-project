@@ -27,7 +27,11 @@ void stampa_stringa(char * s, int dim){
 	}
 	printf("\n");
 }
-
+void print_data_msg(struct data_msg* data){
+	printf("\n| ");
+	printf("opcode=%d | block number=%d | data=\"%s\"",data->opcode,data->block_number,data->data);
+	printf(" |\n\n");
+}
 void print_req_msg(int opcode, struct req_msg* msg){
 	printf("\n| ");
 	printf("opcode=%d | filename=\"%s\" | mode=\"%s\"",msg->opcode,msg->filename,msg->mode);
@@ -52,6 +56,23 @@ void print_msg(int opcode, void* data){
 		default:
 			break;
 	}
+}
+
+int serialize_data(struct data_msg *data,char* buffer){
+	int pos = 0;
+	uint16_t net_order_tmp;
+	net_order_tmp = htons(data->opcode);
+	memcpy(buffer+pos, &net_order_tmp, sizeof(data->opcode));
+	pos+=sizeof(data->opcode);
+	
+	net_order_tmp = htons(data->block_number);
+	memcpy(buffer+pos, &net_order_tmp, sizeof(data->block_number));
+	pos+=sizeof(data->block_number);
+	
+	memcpy(buffer+pos, &data->data, data->num_bytes);
+	pos+=data->num_bytes;
+	
+	return pos;
 }
 
 /* Serializza i campi della struttura req_msq e costruisce il buffer di invio.
@@ -110,6 +131,7 @@ int serialize(int opcode, void *data, char *buffer){
 			ret = serialize_request(RRQ, (struct req_msg*)data, buffer);
 			break;
 		case DATA:
+			ret = serialize_data((struct data_msg*)data, buffer);
 			break;
 		case ERROR:
 			ret = serialize_error((struct err_msg*)data,buffer);
@@ -179,14 +201,45 @@ void* deserialize(int opcode, char* buffer){
 }
 
 void send_data(FILE *file_ptr, int sd, struct sockaddr_in* sv_addr){
-	uint16_t block_number = 0;
+	int ret, len;
 	struct data_msg data;
+	char buf[MAX_DATA_SIZE]; // risultato della serialize_data
 	
 	// ciclo
 	
 	data.opcode = DATA;
-	data.block_numer = block_number++;
+	data.block_number=0;
 
+	data.num_bytes=0; // contatore dei byte di un blocco e indice all'interno del blocco
+	
+	while(!feof(file_ptr)){
+		data.data[data.num_bytes] = fgetc(file_ptr);
+		//if(data.data[data.num_bytes] == EOF)
+			//printf("Fine file\n");
+		data.num_bytes++;
+		if(data.num_bytes == BLOCK_SIZE){
+			printf("Blocco %d %d\n",data.block_number, data.num_bytes);
+			len = serialize_data(&data, buf);
+			ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
+			if(ret < 0){
+				perror("Errore invio blocco");
+				exit(0);
+			}
+			data.num_bytes=0;
+			data.block_number++;
+		}
+	}
+	if(data.num_bytes > 0){
+		// ultimo blocco con dimensione < 512 byte
+		printf("Blocco %d %d\n",data.block_number, data.num_bytes);
+		len = serialize_data(&data, buf);
+		ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
+		if(ret < 0){
+			perror("Errore invio blocco");
+			exit(0);
+		}
+	}
+	//printf("File composto da %d byte\n",data.num_bytes);
 }
 
 void send_request(int opcode, char* filename, char* mode, int sd, struct sockaddr_in* sv_addr){

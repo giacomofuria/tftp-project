@@ -20,6 +20,7 @@ struct data_msg{
 	uint16_t opcode;
 	uint16_t block_number;
 	char data[BLOCK_SIZE];
+	uint16_t num_bytes; // numero di byte nel campo data
 };
 struct err_msg{
 	uint16_t opcode;
@@ -33,12 +34,13 @@ void stampaIndirizzo(struct sockaddr_in str);
 void stampa_stringa(char * s, int dim);
 
 /* Funzioni di debug per la stampa a video dei messaggi */
+void print_data_msg(struct data_msg* data);
 void print_req_msg(int opcode, struct req_msg* msg);
 void print_err_msg(struct err_msg *err);
 void print_msg(int opcode, void* data);
 
 /* Funzioni per la serializzazione e deserializzazione delle info da inviare */
-int serialize_data(uint16_t block_number, struct data_msg *data,char* buffer);
+int serialize_data(struct data_msg *data,char* buffer);
 int serialize_request(int opcode, struct req_msg *msg, char *buffer);
 int serialize_error(struct err_msg *err, char * buffer);
 int serialize(int opcode, void *data, char *buffer);
