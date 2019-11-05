@@ -368,6 +368,7 @@ void* recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_ad
 	void *msg;
 	int ret;
 	memset(buffer, 0, MAX_BUF_SIZE); // pulizia del buffer con tutti \0
+	printf("Server in attesa di nuove richieste.\n");
 	do{
 		ret = recvfrom(sd, buffer, MAX_BUF_SIZE, 0, cl_addr,cl_addrlen);
 	}while(ret < 0);
@@ -376,7 +377,7 @@ void* recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_ad
 
 	memcpy(opcode, buffer, sizeof(*opcode));
 	*opcode = ntohs(*opcode);
-
+	
 	msg = deserialize(*opcode, buffer, ret);
 	//print_msg(*opcode, msg); // DEBUG
 
