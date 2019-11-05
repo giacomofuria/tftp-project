@@ -350,10 +350,11 @@ void* recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_ad
 /* Funzione che riceve i dati dal server e li memorizza nel client. 
    Se riceve un messaggio di errore esce 
  */
-void recv_data(int sd, char* buffer, struct sockaddr_in *sv_addr, int mode){
+void recv_data(int sd, char* buffer, struct sockaddr_in *sv_addr, int mode, FILE* file_locale){
 
 	uint16_t opcode, received_block;
 	socklen_t addrlen = sizeof(*sv_addr);
+	int i;
 	received_block = 0;
 	while(1){
 		void* msg = recv_msg(sd, buffer, (struct sockaddr*)sv_addr,&addrlen, &opcode);
@@ -365,12 +366,16 @@ void recv_data(int sd, char* buffer, struct sockaddr_in *sv_addr, int mode){
 				break;
 			}else if(opcode == DATA){
 				struct data_msg* data = (struct data_msg*) msg;
-				if(data->block_number==0)
+				if(data->block_number==0) // arrivo del primo blocco
 					printf("Trasferimento file in corso.\n");
 				printf("Ricevuto il blocco %d\n",data->block_number);
+				for(i=0; i<data->num_bytes; i++){
+					putc(data->data[i], file_locale);
+				}
 				received_block++;
 				if(data->num_bytes < BLOCK_SIZE){
 					printf("Trasferimento completato (%d/%d blocchi)\n",received_block,(data->block_number+1));
+					fclose(file_locale);
 					break;
 				}		
 			}
