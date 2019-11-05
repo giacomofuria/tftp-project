@@ -87,12 +87,7 @@ int main(int argc, char* argv[]){
 						
 						int l=strlen(componenti[2])-1;
 						componenti[2][l]=0; // tolgo il \n dal fondo del nome del file
-						FILE * file_locale;
-						file_locale = fopen(componenti[2],"w");
-						if(file_locale == NULL){
-							print_err("problema creazione file locale");
-							break;
-						}
+						
 						// invio il messaggio di richiesta al server, in componenti[1] è presente il nome
 						send_request(RRQ, componenti[1],mode, sd, &sv_addr);
 						printf("Richiesta file %s al server in corso.\n",componenti[1]);

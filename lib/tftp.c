@@ -391,16 +391,7 @@ void recv_data(int sd, char* buffer, struct sockaddr_in *sv_addr, int mode, char
 	int i;
 	
 	FILE * file_locale;
-	if(mode==TXT){
-		file_locale = fopen(nome_locale,"w"); // apro in modo testuale
-	}else{
-		file_locale = fopen(nome_locale,"wb"); // apro in modo binario
-	}
 	
-	if(file_locale == NULL){
-		print_err("problema creazione file locale");
-		return;
-	}
 	
 	received_block = 0;
 	while(1){
@@ -413,12 +404,28 @@ void recv_data(int sd, char* buffer, struct sockaddr_in *sv_addr, int mode, char
 				break;
 			}else if(opcode == DATA){
 				struct data_msg* data = (struct data_msg*) msg;
-				if(data->block_number==0) // arrivo del primo blocco
+				if(data->block_number==0){ // arrivo del primo blocco
 					printf("Trasferimento file in corso.\n");
-				printf("Ricevuto il blocco %d\n",data->block_number);
-				for(i=0; i<data->num_bytes; i++){
-					putc(data->data[i], file_locale);
+					if(mode==TXT){
+						file_locale = fopen(nome_locale,"w"); // apro in modo testuale
+					}else{
+						file_locale = fopen(nome_locale,"wb"); // apro in modo binario
+					}
+	
+					if(file_locale == NULL){
+						print_err("problema creazione file locale");
+						return;
+					}
 				}
+				printf("Ricevuto il blocco %d %d byte\n",data->block_number,data->num_bytes);
+				if(mode==TXT){
+					for(i=0; i<data->num_bytes; i++){
+						putc(data->data[i], file_locale);
+					}
+				}else{
+					fwrite(data->data, data->num_bytes, 1, file_locale);
+				}
+				
 				received_block++;
 				if(data->num_bytes < BLOCK_SIZE){
 					printf("Trasferimento completato (%d/%d blocchi)\n",received_block,(data->block_number+1));
