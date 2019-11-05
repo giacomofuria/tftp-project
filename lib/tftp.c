@@ -144,7 +144,7 @@ int serialize(int opcode, void *data, char *buffer){
 	return ret;
 }
 
-void deserialize_data(char *buffer, struct data_msg* data){
+void deserialize_data(char *buffer, struct data_msg* data, int len){
 	int pos=0;
 	
 	memcpy(&data->opcode, buffer+pos, sizeof(data->opcode));
@@ -156,12 +156,13 @@ void deserialize_data(char *buffer, struct data_msg* data){
 	pos+=sizeof(data->block_number);
 	
 	/* Copia al max 512 byte, nel caso siano di meno si ferma al terminatore. */
-	strncpy(data->data, buffer+pos, BLOCK_SIZE);
+	//strncpy(data->data, buffer+pos, BLOCK_SIZE);
+	memcpy(data->data, buffer+pos,len-4);
 	//pos+=strlen(data->data)+1;
 	//int l = strlen(data->data); // DEBUG
 	//printf("DEBUG - HO copiato %d byte\n",l); // DEBUG
 	// aggiungere il valore al campo num_bytes della struttura oppure vedere se è deducibile con strlen
-	data->num_bytes=strlen(data->data);
+	data->num_bytes=len-4;
 }
 
 void deserialize_request(char* buffer, struct req_msg* req){
@@ -202,7 +203,7 @@ void deserialize_error(char * buffer, struct err_msg* msg){
 
 }
 
-void* deserialize(int opcode, char* buffer){
+void* deserialize(int opcode, char* buffer, int len){
 	void *msg;
 	switch(opcode){
 		case RRQ:
@@ -211,7 +212,7 @@ void* deserialize(int opcode, char* buffer){
 			break;
 		case DATA:
 			msg = malloc(sizeof(struct data_msg));
-			deserialize_data(buffer, (struct data_msg*)msg);
+			deserialize_data(buffer, (struct data_msg*)msg, len);
 			break;
 		case ERROR:
 			msg = malloc(sizeof(struct err_msg));
@@ -376,7 +377,7 @@ void* recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_ad
 	memcpy(opcode, buffer, sizeof(*opcode));
 	*opcode = ntohs(*opcode);
 
-	msg = deserialize(*opcode, buffer);
+	msg = deserialize(*opcode, buffer, ret);
 	//print_msg(*opcode, msg); // DEBUG
 
 	return msg;

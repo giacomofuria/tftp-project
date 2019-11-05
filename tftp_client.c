@@ -84,9 +84,10 @@ int main(int argc, char* argv[]){
 					break;
 				case 2: // comando !get
 					if(i==3){
-						FILE * file_locale;
+						
 						int l=strlen(componenti[2])-1;
 						componenti[2][l]=0; // tolgo il \n dal fondo del nome del file
+						FILE * file_locale;
 						file_locale = fopen(componenti[2],"w");
 						if(file_locale == NULL){
 							print_err("problema creazione file locale");

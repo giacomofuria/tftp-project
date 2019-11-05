@@ -45,10 +45,10 @@ int serialize_request(int opcode, struct req_msg *msg, char *buffer);
 int serialize_error(struct err_msg *err, char * buffer);
 int serialize(int opcode, void *data, char *buffer);
 
-void deserialize_data(char *buffer, struct data_msg* data);
+void deserialize_data(char *buffer, struct data_msg* data, int len);
 void deserialize_error(char * buffer, struct err_msg* msg);
 void deserialize_request(char* buffer, struct req_msg* msg);
-void* deserialize(int opcode, char* buffer);
+void* deserialize(int opcode, char* buffer, int len);
 
 
 /* Funzioni per l'invio di messaggi */
