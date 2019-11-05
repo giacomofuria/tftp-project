@@ -101,7 +101,7 @@ int main(int argc, char* argv[]){
 						   il nome con cui si vuole salvare il file in locale
 						*/
 						
-						recv_data(sd, buffer, &sv_addr, mode_num, file_locale);
+						recv_data(sd, buffer, &sv_addr, mode_num, componenti[2]);
 
 					}else{
 						print_err("inserisci i parametri di get correttamente");

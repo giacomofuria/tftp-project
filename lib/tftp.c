@@ -385,11 +385,23 @@ void* recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_ad
 /* Funzione che riceve i dati dal server e li memorizza nel client. 
    Se riceve un messaggio di errore esce 
  */
-void recv_data(int sd, char* buffer, struct sockaddr_in *sv_addr, int mode, FILE* file_locale){
-
+void recv_data(int sd, char* buffer, struct sockaddr_in *sv_addr, int mode, char *nome_locale){
 	uint16_t opcode, received_block;
 	socklen_t addrlen = sizeof(*sv_addr);
 	int i;
+	
+	FILE * file_locale;
+	if(mode==TXT){
+		file_locale = fopen(nome_locale,"w"); // apro in modo testuale
+	}else{
+		file_locale = fopen(nome_locale,"wb"); // apro in modo binario
+	}
+	
+	if(file_locale == NULL){
+		print_err("problema creazione file locale");
+		return;
+	}
+	
 	received_block = 0;
 	while(1){
 		void* msg = recv_msg(sd, buffer, (struct sockaddr*)sv_addr,&addrlen, &opcode);

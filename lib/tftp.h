@@ -59,7 +59,7 @@ void send_error(uint16_t number, char* message, int sd, struct sockaddr_in* sv_a
 /* Funzioni per la ricezione dei messaggi */
 
 void* recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_addrlen, uint16_t *opcode);
-void recv_data(int sd, char* buffer, struct sockaddr_in * sv_addr, int mode, FILE *file_locale);
+void recv_data(int sd, char* buffer, struct sockaddr_in * sv_addr, int mode, char * nome_locale);
 
 /* Funzioni per l'interfaccia del client*/
 void show_help();
