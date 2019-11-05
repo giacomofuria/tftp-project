@@ -41,7 +41,7 @@ int main(int argc, char* argv[]){
 	uint16_t opcode;
 	
 	addrlen = sizeof(cl_addr);
-
+	// Attende un nuovo messaggio
 	void* msg = recv_msg(sd, buffer, (struct sockaddr*)&cl_addr,(socklen_t*)&addrlen, &opcode);
 
 	/* Quando implementerò la versione multi-processo il processo dovrà prendere 

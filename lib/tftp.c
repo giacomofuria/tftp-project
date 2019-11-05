@@ -391,8 +391,7 @@ void recv_data(int sd, char* buffer, struct sockaddr_in *sv_addr, int mode, char
 	int i;
 	
 	FILE * file_locale;
-	
-	
+
 	received_block = 0;
 	while(1){
 		void* msg = recv_msg(sd, buffer, (struct sockaddr*)sv_addr,&addrlen, &opcode);
