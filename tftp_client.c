@@ -84,7 +84,6 @@ int main(int argc, char* argv[]){
 					break;
 				case 2: // comando !get
 					if(i==3){
-						//printf("get di %s e salva in %s\n",componenti[1],componenti[2]); // DEBUG
 						FILE * file_locale;
 						int l=strlen(componenti[2])-1;
 						componenti[2][l]=0; // tolgo il \n dal fondo del nome del file
@@ -93,20 +92,16 @@ int main(int argc, char* argv[]){
 							print_err("problema creazione file locale");
 							break;
 						}
-						stampa_stringa(componenti[2],40);
 						// invio il messaggio di richiesta al server, in componenti[1] è presente il nome
 						send_request(RRQ, componenti[1],mode, sd, &sv_addr);
 						printf("Richiesta file %s al server in corso.\n",componenti[1]);
-						
-						
 						/* Riceve i dati e li salva, in caso di risposta negativa 
 						   da parte del server non fa nulla. In componenti[2] è presente
 						   il nome con cui si vuole salvare il file in locale
 						*/
 						
 						recv_data(sd, buffer, &sv_addr, mode_num, file_locale);
-						
-						
+
 					}else{
 						print_err("inserisci i parametri di get correttamente");
 					}

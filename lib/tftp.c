@@ -278,6 +278,40 @@ void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr){
 		}
 	}else{
 		// lettura e invio in modo binario
+		fseek(file_ptr, 0, SEEK_END);
+		int dim = ftell(file_ptr); // Dimensione del file
+		printf("Dimensione file binario: %d\n",dim);
+		fseek(file_ptr, 0, SEEK_SET);
+		
+		while(dim >= BLOCK_SIZE){
+			memset(data.data,0,BLOCK_SIZE);
+			
+			fread(data.data,BLOCK_SIZE, 1, file_ptr);
+			dim-=BLOCK_SIZE;
+			data.num_bytes = BLOCK_SIZE;
+			// chiamo la serialize
+			printf("Blocco %d %d byte, letto.\n",data.block_number, data.num_bytes);
+			len = serialize_data(&data, buf);
+			ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
+			if(ret < 0){
+				perror("Errore invio blocco");
+				exit(0);
+			}
+			data.num_bytes = 0;
+			data.block_number++;
+		}
+		if(dim >= 0){
+			memset(data.data,0,BLOCK_SIZE);
+			fread(data.data, dim, 1, file_ptr);
+			data.num_bytes = dim;
+			printf("Blocco %d %d byte, letto.\n",data.block_number, data.num_bytes);
+			len = serialize_data(&data, buf);
+			ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
+			if(ret < 0){
+				perror("Errore invio blocco");
+				exit(0);
+			}
+		}
 		
 	}
 }
