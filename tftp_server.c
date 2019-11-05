@@ -6,7 +6,7 @@ int main(int argc, char* argv[]){
 	char directory[MAX_DIR_LENGTH];
 	socklen_t addrlen;
 	struct sockaddr_in my_addr, cl_addr;
-	
+	pid_t pid;
 	/* Gestione porte */
 	if(argc == 3){
 		porta = atoi(argv[1]);
@@ -48,48 +48,61 @@ int main(int argc, char* argv[]){
 		/* Quando implementerò la versione multi-processo il processo dovrà prendere 
 		   una copia di cl_addr per sapere a chi inviare i dati o i messaggi di errore */	
 	
-		/* In base al valore di opcode, il server deve cambiare comportamento (posso mettere uno switch-case) */
-
-		if(opcode == RRQ){
-				struct req_msg *richiesta;
-				richiesta = (struct req_msg*) msg;
-				printf("\nRicevuto un nuovo messaggio RRQ %d\n",opcode);
-				// ricerca del file ed invio del file
-			
-				// simulo che il file non sia presente
-				//send_error(1,"File not found",sd,&cl_addr);
-				FILE *file_ptr;
-				strcat(directory,richiesta->filename);
-				printf("dir: %s\n",directory);
-				int mode;
-				if(strcmp(richiesta->mode, "octet")==0){
-					file_ptr = fopen(directory, "rb");
-					mode = BIN;
-				}else{
-					file_ptr = fopen(directory, "r");
-					mode = TXT;
-				}
-				if(file_ptr == NULL || file_ptr == 0){
-					printf("File \"%s\" non trovato \n",directory);
-					send_error(1,"File not found",sd,&cl_addr);
-				}else{
-					printf("File \"%s\" trovato. \nInvio il file\n",directory);
-					send_data(file_ptr, mode, sd, &cl_addr);
-					printf("Invio del file %s terminato correttamente.\n",richiesta->filename);
-					fclose(file_ptr);
-				}
-				strcpy(directory, argv[2]); //Copio in directory il percorso della cartella
-		}else if(opcode == ERROR){
-				struct err_msg* errore = (struct err_msg*) msg;
-				printf("\nRicevuto un messaggio di errore %d\n",opcode);
-				print_err_msg(errore);
-				// vedere operazioni necessarie
-			
-		}else{
-			// ricezione messaggio con opcode non valido
-			printf("\nRicevuto un messaggio non valido\n");
-			send_error(4,"Illegal TFTP Operation",sd,&cl_addr);
+		pid = fork();
+		if(pid==-1){
+			print_err("creazione processo figlio\n");
+			exit(-1);
 		}
+		if(pid == 0){
+			// processo figlio
+			printf("Processo %d creato.\n",getpid());
+			
+			/* In base al valore di opcode, il server deve cambiare comportamento (posso mettere uno switch-case) */
+			if(opcode == RRQ){
+					struct req_msg *richiesta;
+					richiesta = (struct req_msg*) msg;
+					printf("\nRicevuto un nuovo messaggio RRQ %d\n",opcode);
+					// ricerca del file ed invio del file
+			
+					// simulo che il file non sia presente
+					//send_error(1,"File not found",sd,&cl_addr);
+					FILE *file_ptr;
+					strcat(directory,richiesta->filename);
+					printf("dir: %s\n",directory);
+					int mode;
+					if(strcmp(richiesta->mode, "octet")==0){
+						file_ptr = fopen(directory, "rb");
+						mode = BIN;
+					}else{
+						file_ptr = fopen(directory, "r");
+						mode = TXT;
+					}
+					if(file_ptr == NULL || file_ptr == 0){
+						printf("File \"%s\" non trovato \n",directory);
+						send_error(1,"File not found",sd,&cl_addr);
+					}else{
+						printf("File \"%s\" trovato. \nInvio il file\n",directory);
+						send_data(file_ptr, mode, sd, &cl_addr);
+						printf("Invio del file %s terminato correttamente.\n",richiesta->filename);
+						fclose(file_ptr);
+					}
+					strcpy(directory, argv[2]); //Copio in directory il percorso della cartella
+			}else if(opcode == ERROR){
+					struct err_msg* errore = (struct err_msg*) msg;
+					printf("\nRicevuto un messaggio di errore %d\n",opcode);
+					print_err_msg(errore);
+					// vedere operazioni necessarie
+			
+			}else{
+				// ricezione messaggio con opcode non valido
+				printf("\nRicevuto un messaggio non valido\n");
+				send_error(4,"Illegal TFTP Operation",sd,&cl_addr);
+			}
+			printf("Processo %d termina.\n",getpid());
+			exit(0);
+		}
+		// Processo padre
+		
 	}
 	close(sd);
 
