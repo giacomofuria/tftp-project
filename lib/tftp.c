@@ -157,8 +157,9 @@ void deserialize_data(char *buffer, struct data_msg* data){
 	
 	/* Copia al max 512 byte, nel caso siano di meno si ferma al terminatore. */
 	strncpy(data->data, buffer+pos, BLOCK_SIZE);
-	pos+=strlen(data->data)+1;
-	
+	//pos+=strlen(data->data)+1;
+	//int l = strlen(data->data); // DEBUG
+	//printf("DEBUG - HO copiato %d byte\n",l); // DEBUG
 	// aggiungere il valore al campo num_bytes della struttura oppure vedere se è deducibile con strlen
 	data->num_bytes=strlen(data->data);
 }
@@ -236,27 +237,35 @@ void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr){
 	data.num_bytes=0; // contatore dei byte di un blocco e indice all'interno del blocco
 	if(mode==TXT){
 		while(!feof(file_ptr)){
-			data.data[data.num_bytes] = fgetc(file_ptr);
-			if(data.data[data.num_bytes] == EOF)
-				data.data[data.num_bytes]='\0'; // Quando incontro l'EOF aggiungo un \0 per deserializzare
-				//printf("Fine file\n");
-			//printf("byte-%d %x \n",data.num_bytes,data.data[data.num_bytes]); // DEBUG
+			char tmp_c = fgetc(file_ptr);
+			if(tmp_c == EOF){
+				printf("EOF\n");
+				break;
+			}
+			data.data[data.num_bytes] = tmp_c;
+			
+			//printf("byte-%d %c \n",data.num_bytes,data.data[data.num_bytes]); // DEBUG
+			//int punto = ftell(file_ptr); // DEBUG
+			//printf("punto: %d\n",punto); // DEBUG
+			
 			data.num_bytes++;
+			
 			if(data.num_bytes == BLOCK_SIZE){
-				printf("\nBlocco %d %d\n\n",data.block_number, data.num_bytes);
+				printf("Blocco %d %d byte, letto.\n",data.block_number, data.num_bytes);
 				len = serialize_data(&data, buf);
 				ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
 				if(ret < 0){
 					perror("Errore invio blocco");
 					exit(0);
 				}
-				data.num_bytes=0;
+				data.num_bytes = 0;
 				data.block_number++;
+				memset(data.data, 0, BLOCK_SIZE);
 			}
 		}
-		if(data.num_bytes > 0){
+		if(data.num_bytes >= 0){
 			// ultimo blocco con dimensione < 512 byte
-			printf("Blocco %d %d byte\n",data.block_number, data.num_bytes);
+			printf("Blocco %d %d byte, letto (ultimo).\n",data.block_number, data.num_bytes);
 			len = serialize_data(&data, buf);
 			ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
 			if(ret < 0){
@@ -321,6 +330,7 @@ void send_error(uint16_t number, char* message, int sd, struct sockaddr_in* sv_a
 void* recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_addrlen, uint16_t* opcode){
 	void *msg;
 	int ret;
+	memset(buffer, 0, MAX_BUF_SIZE); // pulizia del buffer con tutti \0
 	do{
 		ret = recvfrom(sd, buffer, MAX_BUF_SIZE, 0, cl_addr,cl_addrlen);
 	}while(ret < 0);
@@ -331,7 +341,7 @@ void* recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_ad
 	*opcode = ntohs(*opcode);
 
 	msg = deserialize(*opcode, buffer);
-	print_msg(*opcode, msg); // DEBUG
+	//print_msg(*opcode, msg); // DEBUG
 
 	return msg;
 }
@@ -357,6 +367,7 @@ void recv_data(int sd, char* buffer, struct sockaddr_in *sv_addr, int mode){
 					printf("Trasferimento file in corso.\n");
 				printf("Ricevuto il blocco %d\n",data->block_number);
 				received_block++;
+				//printf("AAA: %d\n",data->num_bytes); // DEBUG
 				if(data->num_bytes < BLOCK_SIZE){
 					printf("Trasferimento completato (%d/%d blocchi)\n",received_block,(data->block_number+1));
 					break;
