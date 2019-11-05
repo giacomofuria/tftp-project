@@ -239,7 +239,6 @@ void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr){
 		while(!feof(file_ptr)){
 			char tmp_c = fgetc(file_ptr);
 			if(tmp_c == EOF){
-				printf("EOF\n");
 				break;
 			}
 			data.data[data.num_bytes] = tmp_c;
@@ -264,7 +263,11 @@ void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr){
 			}
 		}
 		if(data.num_bytes >= 0){
-			// ultimo blocco con dimensione < 512 byte
+			/*  - Invio del blocco con dimensione < 512 byte che termina anche la comunicazione
+			    - Entra anche quando vale zero nel caso in cui la dimensione del file 
+		   		sia allineata alla dimensione del blocco 512. In tal caso deve inviare
+		   		un messaggio di tipo data composto soltante da opcode e da block_number
+			*/
 			printf("Blocco %d %d byte, letto (ultimo).\n",data.block_number, data.num_bytes);
 			len = serialize_data(&data, buf);
 			ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
@@ -277,7 +280,6 @@ void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr){
 		// lettura e invio in modo binario
 		
 	}
-	//printf("File composto da %d byte\n",data.num_bytes);
 }
 
 void send_request(int opcode, char* filename, char* mode, int sd, struct sockaddr_in* sv_addr){
@@ -367,7 +369,6 @@ void recv_data(int sd, char* buffer, struct sockaddr_in *sv_addr, int mode){
 					printf("Trasferimento file in corso.\n");
 				printf("Ricevuto il blocco %d\n",data->block_number);
 				received_block++;
-				//printf("AAA: %d\n",data->num_bytes); // DEBUG
 				if(data->num_bytes < BLOCK_SIZE){
 					printf("Trasferimento completato (%d/%d blocchi)\n",received_block,(data->block_number+1));
 					break;
