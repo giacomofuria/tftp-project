@@ -253,11 +253,14 @@ void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr){
 			if(data.num_bytes == BLOCK_SIZE){
 				printf("Blocco %d %d byte, letto.\n",data.block_number, data.num_bytes);
 				len = serialize_data(&data, buf);
-				ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
-				if(ret < 0){
-					perror("Errore invio blocco");
-					exit(0);
-				}
+				do{
+					ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
+					if(ret < 0){
+						perror("Errore invio blocco");
+						//exit(0);
+					}
+				}while(ret < 0);
+				
 				data.num_bytes = 0;
 				data.block_number++;
 				memset(data.data, 0, BLOCK_SIZE);
@@ -271,11 +274,13 @@ void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr){
 			*/
 			printf("Blocco %d %d byte, letto (ultimo).\n",data.block_number, data.num_bytes);
 			len = serialize_data(&data, buf);
-			ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
-			if(ret < 0){
-				perror("Errore invio blocco");
-				exit(0);
-			}
+			do{
+				ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
+				if(ret < 0){
+					perror("Errore invio blocco");
+					//exit(0);
+				}
+			}while(ret<0);
 		}
 	}else{
 		// lettura e invio in modo binario
@@ -293,11 +298,13 @@ void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr){
 			// chiamo la serialize
 			printf("Blocco %d %d byte, letto.\n",data.block_number, data.num_bytes);
 			len = serialize_data(&data, buf);
-			ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
-			if(ret < 0){
-				perror("Errore invio blocco");
-				exit(0);
-			}
+			do{
+				ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
+				if(ret < 0){
+					perror("Errore invio blocco");
+					//exit(0);
+				}
+			}while(ret<0);
 			data.num_bytes = 0;
 			data.block_number++;
 		}
@@ -307,11 +314,13 @@ void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr){
 			data.num_bytes = dim;
 			printf("Blocco %d %d byte, letto.\n",data.block_number, data.num_bytes);
 			len = serialize_data(&data, buf);
-			ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
-			if(ret < 0){
-				perror("Errore invio blocco");
-				exit(0);
-			}
+			do{
+				ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
+				if(ret < 0){
+					perror("Errore invio blocco");
+					//exit(0);
+				}
+			}while(ret<0);
 		}
 		
 	}
@@ -329,14 +338,15 @@ void send_request(int opcode, char* filename, char* mode, int sd, struct sockadd
 	strcpy(richiesta.mode, mode);
 	
 	len = serialize(opcode, (void *)&richiesta, buf);
+	do{
+		ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
+		if(ret < 0){
+			perror("Errore invio richiesta");
+			//exit(0);
+		}
+	}while(ret<0);
+	//printf("Richiesta inviata correttamente, inviati %d byte\n",ret); // DEBUG
 	
-	ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
-	if(ret < 0){
-		perror("Errore invio richiesta");
-		exit(0);
-	}else{
-		//printf("Richiesta inviata correttamente, inviati %d byte\n",ret); // DEBUG
-	}
 	//print_msg(RRQ, &richiesta); // DEBUG
 }
 
@@ -351,19 +361,19 @@ void send_error(uint16_t number, char* message, int sd, struct sockaddr_in* sv_a
 	strcpy(errore.err_msg, message);
 
 	len = serialize(ERROR, (void*)&errore, buf);
-	
-	ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
-	if(ret < 0){
-		perror("Errore invio richiesta");
-		exit(0);
-	}else{
-		//printf("Richiesta inviata correttamente, inviati %d byte\n",ret);
-	}
+	do{
+		ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
+		if(ret < 0){
+			perror("Errore invio richiesta");
+			//exit(0);
+		}
+	}while(ret<0);
+	//printf("Richiesta inviata correttamente, inviati %d byte\n",ret);
 	//print_msg(ERROR, &errore); // DEBUG
 }
 
-/* Riceve un messaggio generico, legge il campo opcode e lo restituisce. Scrivere
-   il messaggio ricevuto nel parametro passato buffer */
+/* Riceve un messaggio generico, legge il campo opcode e lo restituisce. Scrive
+   il messaggio ricevuto nel parametro buffer */
 void* recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_addrlen, uint16_t* opcode){
 	void *msg;
 	int ret;

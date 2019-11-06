@@ -19,7 +19,7 @@ int main(int argc, char* argv[]){
 		exit(0);
 	}
 
-	/* Creazione del socket */
+	/* Creazione del socket non bloccante */
 	sd = socket(AF_INET, SOCK_DGRAM | SOCK_NONBLOCK, 0);
 
 	/* Creazione della struttura dati per l'indirizzo del server'*/
