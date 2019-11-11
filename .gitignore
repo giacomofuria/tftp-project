@@ -53,3 +53,5 @@ dkms.conf
 
 tftp_client
 tftp_server
+
+./files/ricevuti/*
