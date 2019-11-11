@@ -16,6 +16,15 @@ int main(int argc, char* argv[]){
 		strcpy(directory, argv[2]);
 		//printf("\nServer in ascolto sulla porta: %d\n",porta); // DEBUG
 		//printf("Directory: \"%s\"\n\n",directory); //DEBUG
+	}else if(argc == 2){
+		/* se sono stati passati due parametri allora è stata passata solo la 
+			directory dei file, la porta è quella di default 69 (che richiede
+			i privilegi di root)
+        */
+        porta = 69;
+        strcpy(directory, argv[1]);
+        printf("\nServer in ascolto sulla porta: %d\n",porta); // DEBUG
+		printf("Directory: \"%s\"\n\n",directory); //DEBUG
 	}else{
 		printf("Errore! Inserisci tutti i parametri necessari\n");
 		exit(0);
