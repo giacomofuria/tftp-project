@@ -6,6 +6,7 @@ char *help_mode = " !mode {txt|bin} --> imposta il modo di trasferimento dei fil
 char *help_get = " !get filename nome_locale --> richiede al server il nome del file <filename> e lo salva localmente con il nome <nome_locale>\n";
 char *help_quit = " !quit --> termina il client\n";
 
+/* Funzione usata per stampare a video l'indirizzo del client o del server in fase di debug */
 void stampaIndirizzo(struct sockaddr_in str){
 	int porta = ntohs(str.sin_port);
 	char indirizzo[INET_ADDRSTRLEN];
@@ -13,53 +14,9 @@ void stampaIndirizzo(struct sockaddr_in str){
 	printf("Indirizzo: %s\n",indirizzo);
 	printf("Numero di porta: %d\n",porta);
 }
-void stampa_stringa(char * s, int dim){
-	int i;
-	printf("Contenuto stringa: ");
-	for(i=0; i<dim; i++){
-		if(s[i]=='\0'){
-			printf("\\0 ");
-		}else if(s[i]=='\n'){
-			printf("\\n ");
-		}else{
-			printf("%c ",s[i]);
-		}
-	}
-	printf("\n");
-}
-void print_data_msg(struct data_msg* data){
-	printf("\n| ");
-	printf("opcode=%d | block number=%d | data=\"%s\"",data->opcode,data->block_number,data->data);
-	printf(" |\n\n");
-	printf("Byte nel blocco: %d\n",data->num_bytes);
-}
-void print_req_msg(int opcode, struct req_msg* msg){
-	printf("\n| ");
-	printf("opcode=%d | filename=\"%s\" | mode=\"%s\"",msg->opcode,msg->filename,msg->mode);
-	printf(" |\n\n");
-}
-void print_err_msg(struct err_msg *err){
-	printf("\n| ");
-	printf("opcode=%d | number=%d | message=\"%s\"",err->opcode, err->err_num, err->err_msg);
-	printf(" |\n\n");
-}
-void print_msg(int opcode, void* data){
-	
-	switch(opcode){
-		case RRQ:
-			print_req_msg(RRQ, (struct req_msg*)data);
-			break;
-		case DATA:
-			print_data_msg((struct data_msg*)data);
-			break;
-		case ERROR:
-			print_err_msg((struct err_msg*)data);
-			break;
-		default:
-			break;
-	}
-}
-
+/* Serializza i campi della struttura data_msq e costruisce il buffer di invio.
+   Restituisce la lunghezza (in byte) del buffer da inviare (num di byte da inviare)
+*/
 int serialize_data(struct data_msg *data,char* buffer){
 	int pos = 0;
 	uint16_t net_order_tmp;
@@ -98,10 +55,11 @@ int serialize_request(int opcode, struct req_msg *msg, char *buffer){
 	msg->byte_zero = 0x00;
 	memcpy(buffer+pos, &msg->byte_zero, sizeof(msg->byte_zero));
 	pos+=sizeof(msg->byte_zero);
-	//printf("pos=%d\n",pos); // DEBUG
 	return pos;
 }
-
+/* Serializza i campi della struttura err_msq e costruisce il buffer di invio.
+   Restituisce la lunghezza (in byte) del buffer da inviare (num di byte da inviare)
+*/
 int serialize_error(struct err_msg *err, char * buffer){
 	int pos=0;
 	uint16_t net_order_opcode = htons(err->opcode);
@@ -121,7 +79,7 @@ int serialize_error(struct err_msg *err, char * buffer){
 		
 	return pos;
 }
-
+/* In base al parametro opcode chiama la funzione di serializzazione specifica */
 int serialize(int opcode, void *data, char *buffer){
 	int ret = 0;
 	
@@ -143,7 +101,9 @@ int serialize(int opcode, void *data, char *buffer){
 	}
 	return ret;
 }
-
+/*
+	Deserializza il contenuto del buffer nei campi della struttura di tipo data_msg
+*/
 void deserialize_data(char *buffer, struct data_msg* data, int len){
 	int pos=0;
 	
@@ -154,17 +114,14 @@ void deserialize_data(char *buffer, struct data_msg* data, int len){
 	memcpy(&data->block_number, buffer+pos, sizeof(data->block_number));
 	data->block_number = ntohs(data->block_number);
 	pos+=sizeof(data->block_number);
-	
-	/* Copia al max 512 byte, nel caso siano di meno si ferma al terminatore. */
-	//strncpy(data->data, buffer+pos, BLOCK_SIZE);
+
 	memcpy(data->data, buffer+pos,len-4);
-	//pos+=strlen(data->data)+1;
-	//int l = strlen(data->data); // DEBUG
-	//printf("DEBUG - HO copiato %d byte\n",l); // DEBUG
-	// aggiungere il valore al campo num_bytes della struttura oppure vedere se è deducibile con strlen
+	
 	data->num_bytes=len-4;
 }
-
+/*
+	Deserializza il contenuto del buffer nei campi della struttura di tipo req_msg
+*/
 void deserialize_request(char* buffer, struct req_msg* req){
 	int pos=0;
 	memcpy(&req->opcode, buffer+pos, sizeof(req->opcode));
@@ -183,7 +140,9 @@ void deserialize_request(char* buffer, struct req_msg* req){
 	memcpy(&req->byte_zero, buffer+pos, sizeof(req->byte_zero));
 	pos+=sizeof(req->byte_zero);
 }
-
+/*
+	Deserializza il contenuto del buffer nei campi della struttura di tipo err_msg
+*/
 void deserialize_error(char * buffer, struct err_msg* msg){
 	int pos=0;
 	
@@ -202,7 +161,10 @@ void deserialize_error(char * buffer, struct err_msg* msg){
 	pos+=sizeof(msg->byte_zero);
 
 }
-
+/*
+	In base al parametro opcode, alloca la struttura necessaria e chiama
+	la funzione di deserializzazione specifica.
+*/
 void* deserialize(int opcode, char* buffer, int len){
 	void *msg;
 	switch(opcode){
@@ -243,24 +205,17 @@ void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr){
 				break;
 			}
 			data.data[data.num_bytes] = tmp_c;
-			
-			//printf("byte-%d %c \n",data.num_bytes,data.data[data.num_bytes]); // DEBUG
-			//int punto = ftell(file_ptr); // DEBUG
-			//printf("punto: %d\n",punto); // DEBUG
-			
 			data.num_bytes++;
-			
 			if(data.num_bytes == BLOCK_SIZE){
-				printf("Blocco %d %d byte, letto.\n",data.block_number, data.num_bytes);
+				//printf("Blocco %d %d byte, letto.\n",data.block_number, data.num_bytes); // DEBUG
 				len = serialize_data(&data, buf);
 				do{
 					ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
 					if(ret < 0){
 						perror("Errore invio blocco");
-						//exit(0);
+						exit(0);
 					}
 				}while(ret < 0);
-				
 				data.num_bytes = 0;
 				data.block_number++;
 				memset(data.data, 0, BLOCK_SIZE);
@@ -270,23 +225,22 @@ void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr){
 			/*  - Invio del blocco con dimensione < 512 byte che termina anche la comunicazione
 			    - Entra anche quando vale zero nel caso in cui la dimensione del file 
 		   		sia allineata alla dimensione del blocco 512. In tal caso deve inviare
-		   		un messaggio di tipo data composto soltante da opcode e da block_number
+		   		un messaggio di tipo DATA composto soltanto da opcode e da block_number (4 byte)
 			*/
-			printf("Blocco %d %d byte, letto (ultimo).\n",data.block_number, data.num_bytes);
+			//printf("Blocco %d %d byte, letto (ultimo).\n",data.block_number, data.num_bytes); // DEBUG
 			len = serialize_data(&data, buf);
 			do{
 				ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
 				if(ret < 0){
 					perror("Errore invio blocco");
-					//exit(0);
+					exit(0);
 				}
 			}while(ret<0);
 		}
 	}else{
 		// lettura e invio in modo binario
 		fseek(file_ptr, 0, SEEK_END);
-		int dim = ftell(file_ptr); // Dimensione del file
-		printf("Dimensione file binario: %d\n",dim);
+		int dim = ftell(file_ptr); // Determino la dimensione del file
 		fseek(file_ptr, 0, SEEK_SET);
 		
 		while(dim >= BLOCK_SIZE){
@@ -295,14 +249,13 @@ void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr){
 			fread(data.data,BLOCK_SIZE, 1, file_ptr);
 			dim-=BLOCK_SIZE;
 			data.num_bytes = BLOCK_SIZE;
-			// chiamo la serialize
-			printf("Blocco %d %d byte, letto.\n",data.block_number, data.num_bytes);
+			//printf("Blocco %d %d byte, letto.\n",data.block_number, data.num_bytes); //DEBUG
 			len = serialize_data(&data, buf);
 			do{
 				ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
 				if(ret < 0){
 					perror("Errore invio blocco");
-					//exit(0);
+					exit(0);
 				}
 			}while(ret<0);
 			data.num_bytes = 0;
@@ -312,7 +265,7 @@ void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr){
 			memset(data.data,0,BLOCK_SIZE);
 			fread(data.data, dim, 1, file_ptr);
 			data.num_bytes = dim;
-			printf("Blocco %d %d byte, letto.\n",data.block_number, data.num_bytes);
+			//printf("Blocco %d %d byte, letto.\n",data.block_number, data.num_bytes); // DEBUG
 			len = serialize_data(&data, buf);
 			do{
 				ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
@@ -325,7 +278,9 @@ void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr){
 		
 	}
 }
-
+/* Invia al server, specificato dall'indirizzo puntato da sv_addr, un messaggio
+   di richiesta con opcode e filename specificati come parametri
+*/
 void send_request(int opcode, char* filename, char* mode, int sd, struct sockaddr_in* sv_addr){
 	int ret, len;
 	char buf[MAX_BUF_SIZE];
@@ -346,10 +301,9 @@ void send_request(int opcode, char* filename, char* mode, int sd, struct sockadd
 		}
 	}while(ret<0);
 	//printf("Richiesta inviata correttamente, inviati %d byte\n",ret); // DEBUG
-	
 	//print_msg(RRQ, &richiesta); // DEBUG
 }
-
+/* Invia un messaggio di errore con numero "number" e messaggio "messagge" */
 void send_error(uint16_t number, char* message, int sd, struct sockaddr_in* sv_addr){
 	int ret, len;
 	char buf[MAX_BUF_SIZE];
@@ -368,23 +322,20 @@ void send_error(uint16_t number, char* message, int sd, struct sockaddr_in* sv_a
 			//exit(0);
 		}
 	}while(ret<0);
-	//printf("Richiesta inviata correttamente, inviati %d byte\n",ret);
+	//printf("Richiesta inviata correttamente, inviati %d byte\n",ret); // DEBUG
 	//print_msg(ERROR, &errore); // DEBUG
 }
 
 /* Riceve un messaggio generico, legge il campo opcode e lo restituisce. Scrive
-   il messaggio ricevuto nel parametro buffer */
+   il messaggio ricevuto nel parametro buffer. */
 void* recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_addrlen, uint16_t* opcode){
 	void *msg;
 	int ret;
 	memset(buffer, 0, MAX_BUF_SIZE); // pulizia del buffer con tutti \0
-	printf("Server in attesa di nuove richieste.\n");
 	do{
 		ret = recvfrom(sd, buffer, MAX_BUF_SIZE, 0, cl_addr,cl_addrlen);
 	}while(ret < 0);
-
-	printf("Messaggio ricevuto correttamente, ricevuti %d byte\n",ret); // DEBUG
-
+	//printf("Messaggio ricevuto correttamente, ricevuti %d byte\n",ret); // DEBUG
 	memcpy(opcode, buffer, sizeof(*opcode));
 	*opcode = ntohs(*opcode);
 	
@@ -393,8 +344,9 @@ void* recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_ad
 
 	return msg;
 }
-/* Funzione che riceve i dati dal server e li memorizza nel client. 
-   Se riceve un messaggio di errore esce 
+/* Funzione che riceve i dati dal server e scrive il file nel client. In base al 
+   parametro "mode" apre il file in modalità testo o binaria.
+   Se riceve un messaggio di errore esce (file non trovato). 
  */
 void recv_data(int sd, char* buffer, struct sockaddr_in *sv_addr, int mode, char *nome_locale){
 	uint16_t opcode, received_block;
@@ -408,7 +360,6 @@ void recv_data(int sd, char* buffer, struct sockaddr_in *sv_addr, int mode, char
 		void* msg = recv_msg(sd, buffer, (struct sockaddr*)sv_addr,&addrlen, &opcode);
 		if(msg != NULL){
 			if(opcode == ERROR){
-				//struct err_msg* errore = (struct err_msg*) msg;
 				printf("File non trovato.\n");
 				// vedere operazioni necessarie
 				break;
@@ -427,7 +378,7 @@ void recv_data(int sd, char* buffer, struct sockaddr_in *sv_addr, int mode, char
 						return;
 					}
 				}
-				printf("Ricevuto il blocco %d %d byte\n",data->block_number,data->num_bytes);
+				//printf("Ricevuto il blocco %d %d byte\n",data->block_number,data->num_bytes);// DEBUG
 				if(mode==TXT){
 					for(i=0; i<data->num_bytes; i++){
 						putc(data->data[i], file_locale);
@@ -440,23 +391,25 @@ void recv_data(int sd, char* buffer, struct sockaddr_in *sv_addr, int mode, char
 				if(data->num_bytes < BLOCK_SIZE){
 					printf("Trasferimento completato (%d/%d blocchi)\n",received_block,(data->block_number+1));
 					fclose(file_locale);
+					printf("Salvataggio %s completato\n",nome_locale);
 					break;
 				}		
 			}
 		}	
 	}
-	
 }
 
 /* Funzioni per l'interfaccia del client */
 
+/* Mostra l'help dei comandi */
 void show_help(){
 	printf("\n%s %s %s %s %s \n",help,help_help, help_mode,help_get, help_quit);
 }
-
+/* Funzione per la stampa di errori */
 void print_err(char * msg){
 	printf("Errore: %s\n",msg);
 }
+/* Restituisce un numero diverso per ogni comando, -1 se il comando non esiste. */
 int get_cmd_code(char* cmd){
 	if(strcmp(cmd,"!help\n")==0)
 		return 0;

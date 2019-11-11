@@ -39,7 +39,7 @@ void print_req_msg(int opcode, struct req_msg* msg);
 void print_err_msg(struct err_msg *err);
 void print_msg(int opcode, void* data);
 
-/* Funzioni per la serializzazione e deserializzazione dei messaggi da inviare */
+/* Funzioni per la serializzazione/deserializzazione dei messaggi da inviare/ricevere */
 int serialize_data(struct data_msg *data,char* buffer);
 int serialize_request(int opcode, struct req_msg *msg, char *buffer);
 int serialize_error(struct err_msg *err, char * buffer);
@@ -57,7 +57,6 @@ void send_request(int opcode, char* filename, char* mode, int sd, struct sockadd
 void send_error(uint16_t number, char* message, int sd, struct sockaddr_in* sv_addr);
 
 /* Funzioni per la ricezione dei messaggi */
-
 void* recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_addrlen, uint16_t *opcode);
 void recv_data(int sd, char* buffer, struct sockaddr_in * sv_addr, int mode, char * nome_locale);
 
