@@ -207,13 +207,11 @@ void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr){
 			data.data[data.num_bytes] = tmp_c;
 			data.num_bytes++;
 			if(data.num_bytes == BLOCK_SIZE){
-				//printf("Blocco %d %d byte, letto.\n",data.block_number, data.num_bytes); // DEBUG
 				len = serialize_data(&data, buf);
 				do{
 					ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
 					if(ret < 0){
 						perror("Errore invio blocco");
-						exit(0);
 					}
 				}while(ret < 0);
 				data.num_bytes = 0;
@@ -227,13 +225,12 @@ void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr){
 		   		sia allineata alla dimensione del blocco 512. In tal caso deve inviare
 		   		un messaggio di tipo DATA composto soltanto da opcode e da block_number (4 byte)
 			*/
-			//printf("Blocco %d %d byte, letto (ultimo).\n",data.block_number, data.num_bytes); // DEBUG
+			
 			len = serialize_data(&data, buf);
 			do{
 				ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
 				if(ret < 0){
 					perror("Errore invio blocco");
-					exit(0);
 				}
 			}while(ret<0);
 		}
@@ -249,29 +246,26 @@ void send_data(FILE *file_ptr, int mode, int sd, struct sockaddr_in* sv_addr){
 			fread(data.data,BLOCK_SIZE, 1, file_ptr);
 			dim-=BLOCK_SIZE;
 			data.num_bytes = BLOCK_SIZE;
-			//printf("Blocco %d %d byte, letto.\n",data.block_number, data.num_bytes); //DEBUG
 			len = serialize_data(&data, buf);
 			do{
 				ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
 				if(ret < 0){
 					perror("Errore invio blocco");
-					exit(0);
 				}
 			}while(ret<0);
 			data.num_bytes = 0;
 			data.block_number++;
 		}
+		// ultimo blocco con dimensione tra 0 e BLOCK_SIZE-1
 		if(dim >= 0){
 			memset(data.data,0,BLOCK_SIZE);
 			fread(data.data, dim, 1, file_ptr);
 			data.num_bytes = dim;
-			//printf("Blocco %d %d byte, letto.\n",data.block_number, data.num_bytes); // DEBUG
 			len = serialize_data(&data, buf);
 			do{
 				ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
 				if(ret < 0){
 					perror("Errore invio blocco");
-					//exit(0);
 				}
 			}while(ret<0);
 		}
@@ -295,13 +289,11 @@ void send_request(int opcode, char* filename, char* mode, int sd, struct sockadd
 	len = serialize(opcode, (void *)&richiesta, buf);
 	do{
 		ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
-		if(ret < 0){
-			perror("Errore invio richiesta");
-			//exit(0);
-		}
 	}while(ret<0);
-	//printf("Richiesta inviata correttamente, inviati %d byte\n",ret); // DEBUG
-	//print_msg(RRQ, &richiesta); // DEBUG
+	if(ret == 0){
+		print_err("messaggio di richiesta non inviato");
+		exit(1);
+	}
 }
 /* Invia un messaggio di errore con numero "number" e messaggio "messagge" */
 void send_error(uint16_t number, char* message, int sd, struct sockaddr_in* sv_addr){
@@ -317,13 +309,11 @@ void send_error(uint16_t number, char* message, int sd, struct sockaddr_in* sv_a
 	len = serialize(ERROR, (void*)&errore, buf);
 	do{
 		ret = sendto(sd, buf, len, 0, (struct sockaddr*)sv_addr, sizeof(*sv_addr));
-		if(ret < 0){
-			perror("Errore invio richiesta");
-			//exit(0);
-		}
 	}while(ret<0);
-	//printf("Richiesta inviata correttamente, inviati %d byte\n",ret); // DEBUG
-	//print_msg(ERROR, &errore); // DEBUG
+	if(ret == 0){
+		print_err("messaggio di errore non inviato");
+		exit(1);
+	}
 }
 
 /* Riceve un messaggio generico, legge il campo opcode e lo restituisce. Scrive
@@ -335,12 +325,10 @@ void* recv_msg(int sd, char* buffer, struct sockaddr * cl_addr, socklen_t* cl_ad
 	do{
 		ret = recvfrom(sd, buffer, MAX_BUF_SIZE, 0, cl_addr,cl_addrlen);
 	}while(ret < 0);
-	//printf("Messaggio ricevuto correttamente, ricevuti %d byte\n",ret); // DEBUG
 	memcpy(opcode, buffer, sizeof(*opcode));
 	*opcode = ntohs(*opcode);
 	
 	msg = deserialize(*opcode, buffer, ret);
-	//print_msg(*opcode, msg); // DEBUG
 
 	return msg;
 }
@@ -352,12 +340,11 @@ void recv_data(int sd, char* buffer, struct sockaddr_in *sv_addr, int mode, char
 	uint16_t opcode, received_block;
 	socklen_t addrlen = sizeof(*sv_addr);
 	int i;
-	
+	void* msg;
 	FILE * file_locale;
-
 	received_block = 0;
 	while(1){
-		void* msg = recv_msg(sd, buffer, (struct sockaddr*)sv_addr,&addrlen, &opcode);
+		msg = recv_msg(sd, buffer, (struct sockaddr*)sv_addr,&addrlen, &opcode);
 		if(msg != NULL){
 			if(opcode == ERROR){
 				printf("File non trovato.\n");
@@ -378,7 +365,6 @@ void recv_data(int sd, char* buffer, struct sockaddr_in *sv_addr, int mode, char
 						return;
 					}
 				}
-				//printf("Ricevuto il blocco %d %d byte\n",data->block_number,data->num_bytes);// DEBUG
 				if(mode==TXT){
 					for(i=0; i<data->num_bytes; i++){
 						putc(data->data[i], file_locale);
@@ -395,6 +381,7 @@ void recv_data(int sd, char* buffer, struct sockaddr_in *sv_addr, int mode, char
 					break;
 				}		
 			}
+			free(msg); // dealloco lo spazio allocato dinamicamente per la struttura
 		}	
 	}
 }

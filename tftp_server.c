@@ -11,11 +11,10 @@ int main(int argc, char* argv[]){
 	pid_t pid;
 	/* Gestione porte */
 	if(argc == 3){
-		porta = atoi(argv[1]);
-		
-		strcpy(directory, argv[2]);
-		//printf("\nServer in ascolto sulla porta: %d\n",porta); // DEBUG
-		//printf("Directory: \"%s\"\n\n",directory); //DEBUG
+		porta = atoi(argv[1]);      // prelevo il numero di porta
+		strcpy(directory, argv[2]); // copia in directory la cartella in cui prelevare i files
+		printf("\nServer in ascolto sulla porta: %d\n",porta);
+		printf("Directory: \"%s\"\n\n",directory);
 	}else if(argc == 2){
 		/* se sono stati passati due parametri allora è stata passata solo la 
 			directory dei file, la porta è quella di default 69 (che richiede
@@ -23,8 +22,8 @@ int main(int argc, char* argv[]){
         */
         porta = 69;
         strcpy(directory, argv[1]);
-        printf("\nServer in ascolto sulla porta: %d\n",porta); // DEBUG
-		printf("Directory: \"%s\"\n\n",directory); //DEBUG
+        printf("\nServer in ascolto sulla porta: %d\n",porta);
+		printf("Directory: \"%s\"\n\n",directory);
 	}else{
 		printf("Errore! Inserisci tutti i parametri necessari\n");
 		exit(0);
@@ -36,14 +35,13 @@ int main(int argc, char* argv[]){
 		print_err("creazione socket");
 		exit(0);
 	}
-	printf("\nCreazione socket di ascolto avvenuta con successo.\n");
+	printf("Creazione socket di ascolto avvenuta con successo.\n");
 	
 	/* Creazione della struttura dati per l'indirizzo del server'*/
 	memset(&my_addr, 0, sizeof(my_addr));
 	my_addr.sin_family = AF_INET;
 	my_addr.sin_port = htons(porta);
 	my_addr.sin_addr.s_addr = INADDR_ANY;
-	//stampaIndirizzo(my_addr); // DEBUG
 	
 	/* Eseguo la bind tra il socket e l'indirizzo */
 	ret = bind(sd, (struct sockaddr*)&my_addr, sizeof(my_addr));
@@ -58,12 +56,13 @@ int main(int argc, char* argv[]){
 	
 		pid = fork();
 		if(pid==-1){
-			print_err("creazione processo figlio\n");
+			print_err("creazione processo figlio\n"); // errore nella creazione di un processo
 			exit(-1);
 		}
 		if(pid == 0){ // processo figlio
 			printf("\nCreazione processo con pid=%d\n",getpid());
 			/* In base al valore di opcode, il server esegue le diverse operazioni */
+
 			if(opcode == RRQ){
 					struct req_msg *richiesta;
 					richiesta = (struct req_msg*) msg;
@@ -81,7 +80,7 @@ int main(int argc, char* argv[]){
 					}
 					if(file_ptr == NULL || file_ptr == 0){
 						printf("[pid=%d] File \"%s\" non trovato.\n",getpid(),directory);
-						send_error(1,"File not found",sd,&cl_addr);
+						send_error(FILE_NOT_FOUND,"File not found",sd,&cl_addr);
 					}else{
 						printf("[pid=%d] File \"%s\" trovato, invio il file.\n",getpid(),directory);
 						send_data(file_ptr, mode, sd, &cl_addr);
@@ -96,12 +95,15 @@ int main(int argc, char* argv[]){
 			}else{
 				// ricezione messaggio con opcode non valido
 				printf("[pid=%d] Ricevuto un messaggio non valido\n",getpid());
-				send_error(4,"Illegal TFTP Operation",sd,&cl_addr);
+				send_error(ILLEGAL_TFTP_OPERATION,"Illegal TFTP Operation",sd,&cl_addr);
 			}
 			printf("Terminazione processo con pid=%d\n",getpid()); // DEBUG
 			exit(0);
 		}
 		// Processo padre
+		if(msg!=NULL){
+			free(msg); // dealloco lo spazio occupato per la struttura contenente il messaggio
+		}
 	}
 	close(sd);
 
