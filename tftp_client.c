@@ -2,39 +2,22 @@
 #include "lib/tftp.h"
 
 int main(int argc, char* argv[]){
-	int ret, sd;
-	int flag = 1;
-	struct sockaddr_in my_addr, sv_addr;
+	int sd, flag = 1, mode_num = BIN;
+	struct sockaddr_in sv_addr;
 
 	char cmd[MAX_CMD_LENGTH];
 	char mode[MAX_MODE_LENGTH];
-	strcpy(mode, "octet"); // di default uso il modo di trasferimento binario
-	int mode_num = BIN;
-	
 	char buffer[MAX_BUF_SIZE];
-	
-	printf("Ci sono %d argomenti\n",argc);
-	if(argc >= 3){	
-		printf("Indirizzo del server: %s\n",argv[1]);
-		printf("Porta del server: %s\n",argv[2]);
-	}else{
+
+
+	strcpy(mode, "octet"); // di default uso il modo di trasferimento binario
+
+	if(argc < 3){
 		printf("Errore! Inserisci tutti i parametri necessari\n");
 		exit(0);
 	}
 	/* Socket con cui il client invia le sue richieste */
 	sd = socket(AF_INET, SOCK_DGRAM, 0);
-
-	/* Indirizzo del client */
-	memset((void*)&my_addr, 0, sizeof(my_addr));
-	my_addr.sin_family = AF_INET;
-	my_addr.sin_port = htons(4243);
-	my_addr.sin_addr.s_addr = INADDR_ANY;
-	
-	ret = bind(sd, (struct sockaddr*)&my_addr, sizeof(my_addr));
-	if(ret < 0){
-		perror("Errore nella bind: ");
-		exit(0);
-	}
 
 	/* Indirizzo del server */
 	memset(&sv_addr, 0, sizeof(sv_addr));
@@ -95,7 +78,6 @@ int main(int argc, char* argv[]){
 						   da parte del server non fa nulla. In componenti[2] è presente
 						   il nome con cui si vuole salvare il file in locale
 						*/
-						
 						recv_data(sd, buffer, &sv_addr, mode_num, componenti[2]);
 
 					}else{
