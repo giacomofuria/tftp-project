@@ -21,10 +21,6 @@
 #define DATA	3
 #define	ERROR	5
 
-// ERROR NUMBERS
-#define FILE_NOT_FOUND				1
-#define	ILLEGAL_TFTP_OPERATION		4
-
 // MODES
 #define BIN 0
 #define TXT 1
